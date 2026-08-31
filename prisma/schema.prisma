@@ -161,21 +161,23 @@ model Company {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  users        User[]
-  clients      Client[]
-  crews        Crew[]
-  serviceAreas ServiceArea[]
-  leads        Lead[]
-  quotes       Quote[]
-  jobs         Job[]
-  invoices     Invoice[]
-  photos       Photo[]
-  documents    Document[]
-  tags         Tag[]
-  galleries    Gallery[]
-  tasks        Task[]
-  comments     Comment[]
-  auditLogs    AuditLog[]
+  users         User[]
+  clients       Client[]
+  contacts      Contact[]
+  crews         Crew[]
+  serviceAreas  ServiceArea[]
+  leads         Lead[]
+  quotes        Quote[]
+  jobs          Job[]
+  invoices      Invoice[]
+  photos        Photo[]
+  documents     Document[]
+  tags          Tag[]
+  galleries     Gallery[]
+  tasks         Task[]
+  taskTemplates TaskTemplate[]
+  comments      Comment[]
+  auditLogs     AuditLog[]
 }
 
 model User {
@@ -278,8 +280,17 @@ model Client {
 
 model Contact {
   id             String         @id @default(cuid())
-  clientId       String
-  client         Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  companyId      String
+  company        Company        @relation(fields: [companyId], references: [id])
+  // A contact usually traces back to exactly one of these -- whichever it is
+  // says where it came from. A contact with none of the three is a general,
+  // manually-added contact (vendor, supplier, etc.) not tied to anything.
+  clientId       String?
+  client         Client?        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  leadId         String?        @unique
+  lead           Lead?          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  crewId         String?        @unique
+  crew           Crew?          @relation(fields: [crewId], references: [id], onDelete: Cascade)
   firstName      String
   lastName       String
   title          String? // e.g. "Property Manager", "Tenant", "AP Contact"
@@ -344,7 +355,8 @@ model Lead {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  quotes Quote[]
+  quotes  Quote[]
+  contact Contact?
 }
 
 model Quote {
@@ -532,6 +544,8 @@ model Crew {
   jobAssignments     JobAssignment[]
   subcontractorCosts SubcontractorCost[]
   serviceAreas       CrewServiceArea[]
+  contact            Contact?
+  mentions           CommentMention[]
 }
 
 model CrewMember {
@@ -812,6 +826,8 @@ model Task {
   photo             Photo?     @relation(fields: [photoId], references: [id])
   title             String
   description       String?
+  requiresPhoto     Boolean    @default(false)
+  sortOrder         Int        @default(0)
   status            TaskStatus @default(OPEN)
   assignedToId      String?
   assignedTo        User?      @relation("TaskAssignee", fields: [assignedToId], references: [id])
@@ -823,6 +839,30 @@ model Task {
   createdByUser     User       @relation("TaskCreatedBy", fields: [createdByUserId], references: [id])
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
+}
+
+// A saved checklist an office admin can apply to new jobs of a given trade
+// (e.g. "Standard HVAC Install") instead of typing the same tasks every time.
+model TaskTemplate {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String
+  trade     Trade?
+  createdAt DateTime @default(now())
+
+  items TaskTemplateItem[]
+
+  @@unique([companyId, name])
+}
+
+model TaskTemplateItem {
+  id            String       @id @default(cuid())
+  templateId    String
+  template      TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  title         String
+  requiresPhoto Boolean      @default(false)
+  sortOrder     Int          @default(0)
 }
 
 model Comment {
@@ -846,8 +886,11 @@ model CommentMention {
   id        String  @id @default(cuid())
   commentId String
   comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User    @relation(fields: [userId], references: [id])
+  // Exactly one of these is set -- a mention targets a person or a whole crew.
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id])
+  crewId    String?
+  crew      Crew?   @relation(fields: [crewId], references: [id])
 }
 
 // ─────────────────────────────────────────────────────────────────────────

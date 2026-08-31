@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, forwardRef } from "react";
 
 const fieldClass =
   "block w-full rounded-md border border-[#DDD6C7] px-3 py-2 text-sm text-[#16233A] placeholder:text-[#8A93A3] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F]";
@@ -23,9 +23,12 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${fieldClass} ${props.className ?? ""}`} />;
 }
 
-export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={`${fieldClass} ${props.className ?? ""}`} />;
-}
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  (props, ref) => (
+    <textarea ref={ref} {...props} className={`${fieldClass} ${props.className ?? ""}`} />
+  )
+);
+Textarea.displayName = "Textarea";
 
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={`${fieldClass} bg-white ${props.className ?? ""}`} />;

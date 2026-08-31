@@ -41,19 +41,38 @@ export async function createLead(formData: FormData) {
   const source =
     sourceRaw === "OTHER" ? String(formData.get("sourceOther") ?? "").trim() || null : sourceRaw || null;
 
-  await prisma.lead.create({
+  const contactEmail = String(formData.get("contactEmail") ?? "") || null;
+  const contactPhone = String(formData.get("contactPhone") ?? "") || null;
+
+  const lead = await prisma.lead.create({
     data: {
       companyId: company.id,
       clientId,
       propertyId,
       contactName,
-      contactEmail: String(formData.get("contactEmail") ?? "") || null,
-      contactPhone: String(formData.get("contactPhone") ?? "") || null,
+      contactEmail,
+      contactPhone,
       city,
       serviceAreaId,
       source,
       trade,
       description,
+    },
+  });
+
+  // Every lead's contact automatically shows up in the general Contacts
+  // directory, so office staff have one place to look someone up.
+  const [firstName, ...rest] = contactName.split(" ");
+  await prisma.contact.create({
+    data: {
+      companyId: company.id,
+      leadId: lead.id,
+      clientId,
+      firstName,
+      lastName: rest.join(" "),
+      title: "Lead",
+      email: contactEmail,
+      phone: contactPhone,
     },
   });
 

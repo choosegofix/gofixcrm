@@ -137,6 +137,7 @@ async function main() {
     update: {},
     create: {
       id: "contact-maple-ridge-1",
+      companyId: company.id,
       clientId: clientA.id,
       firstName: "Linda",
       lastName: "Osei",
@@ -183,6 +184,7 @@ async function main() {
     update: {},
     create: {
       id: "contact-riverside-1",
+      companyId: company.id,
       clientId: clientB.id,
       firstName: "Marcus",
       lastName: "Webb",

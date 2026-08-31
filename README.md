@@ -21,11 +21,39 @@ just the plan below). Right now:
   contacts and properties, basic job creation.
 - ✅ **Phase 2 — Scheduling core**: job status pipeline, visit scheduling, a
   day-by-day schedule view, crew/subcontractor assignment.
-- ⏳ **Phase 3 — Photo documentation** (the CompanyCam layer): not built yet.
-  This needs your Google Workspace upgrade and Shared Drive set up first —
-  see "Setting up Google Drive storage" below for what that will involve.
-- ⏳ **Phase 4 onward** — quoting, invoicing/Stripe payments, the client
-  portal, comments/tasks, reporting, QuickBooks — not built yet.
+- ✅ **Phase 3 — Leads, quoting & invoicing**: lead intake with a structured
+  source dropdown, quote builder with line items, invoice generation with
+  billing contact info shown, a client-facing summary of each.
+- ✅ **Service areas & the GTA map**: every crew has one or more areas of
+  operation (Toronto, North York, Scarborough, etc. — these grow
+  automatically as new city names are typed in, they aren't a fixed list).
+  Leads, quotes, and jobs each show a colored area badge, addresses are
+  geocoded automatically (free, no API key) so a "local crew" can be
+  suggested, and the **Map** page plots every active job as a pin on a free
+  OpenStreetMap map with one-click Google Maps / Apple Maps / Waze
+  directions in each pin's popup.
+- ✅ **Filters** on Jobs, Crews, Leads, Quotes, and Invoices (by trade, area,
+  status, or source, wherever relevant).
+- ✅ **Contacts directory**: a company-wide address book. Every lead and
+  every crew automatically gets a contact card here, and office/admin users
+  can add standalone contacts by hand.
+- ✅ **Job hub features**: checklists (with reusable, trade-specific
+  templates you build once and apply to any job in a click — an item can be
+  flagged "photo required" for later), tags/labels, @mention comments that
+  notify the tagged person or an entire crew (with a notification bell in
+  the header), and inline client/property creation right from the New Job
+  form.
+- ✅ **Subcontractor scoping**: subcontractor logins can only see and act on
+  jobs they (or their crew) are actually assigned to — enforced on the
+  server, not just hidden in the menu. A demo subcontractor account is
+  included in the seed data (see the login table below).
+- ⏳ **Photo uploads & document storage** (the CompanyCam layer): not built
+  yet. This needs your Google Workspace upgrade and Shared Drive set up
+  first — see "Setting up Google Drive storage" below for what that will
+  involve. The checklist feature already has a "photo required" flag on
+  tasks ready for this to plug into.
+- ⏳ **Stripe payments, the client portal, reporting, QuickBooks** — not
+  built yet.
 
 ---
 
@@ -103,11 +131,17 @@ logins, two demo clients with contacts/properties, and two demo jobs.
 **Demo logins** (all use the password `password123` — change these before
 using the app for real):
 
-| Role   | Email                      |
-|--------|-----------------------------|
-| Admin  | admin@gofixservices.ca      |
-| Office | office@gofixservices.ca     |
-| Field  | field@gofixservices.ca      |
+| Role         | Email                              |
+|--------------|-------------------------------------|
+| Admin        | admin@gofixservices.ca             |
+| Office       | office@gofixservices.ca            |
+| Field        | field@gofixservices.ca             |
+| Subcontractor| sub@brightsparkelectric.example    |
+
+The subcontractor login belongs to a demo crew ("BrightSpark Electric")
+that's only assigned to one seed job — sign in as this user to see how
+restricted the subcontractor view is: no client list, no other crews' jobs,
+no company financials, just their own assigned work.
 
 ---
 
@@ -209,24 +243,32 @@ we get to this phase — nothing here happens automatically.
 ```
 prisma/
   schema.prisma       The full database design (every table & field)
+  migrations/          Hand-tracked, ordered database changes
   seed.ts              Demo data loaded by `npm run db:seed`
 src/
   app/
     login/             Staff sign-in page
     (dashboard)/        Everything behind login: dashboard, clients, jobs,
-                         schedule, crews, team settings
+                         schedule, crews, contacts, map, checklist templates,
+                         team settings
     actions/            Server-side functions that create/update records
     api/auth/            Login/session plumbing (Auth.js)
   components/
-    ui/                 Small reusable building blocks (buttons, form fields, cards)
-    layout/              The sidebar/header shell
-    jobs/                Job-specific interactive bits
-  lib/                   Database client, auth config, shared helpers
+    ui/                 Small reusable building blocks (buttons, form fields,
+                         cards, the URL-based filter dropdown)
+    layout/              The sidebar/header shell, notification bell
+    jobs/                Job-hub bits: checklist editor, comment composer
+                         with @mention autocomplete, schedule-visit button
+    map/                 The Leaflet active-jobs map
+  lib/                   Database client, auth config, shared helpers —
+                         including jobAccess.ts (subcontractor scoping),
+                         serviceArea.ts, geocode.ts
 .env.example             Every environment variable, explained
 ```
 
 ## Tech stack
 
 Next.js (React + TypeScript) · PostgreSQL · Prisma · Auth.js · Tailwind CSS ·
-Google Drive API (planned) · Stripe (planned) · hosted on Vercel + Neon
-(planned)
+Leaflet + OpenStreetMap (free active-jobs map, no API key) · Nominatim (free
+address geocoding) · Google Drive API (planned) · Stripe (planned) · hosted
+on Vercel + Neon (planned)

@@ -47,6 +47,7 @@ export async function createClient(formData: FormData) {
   if (contactFirstName) {
     await prisma.contact.create({
       data: {
+        companyId: company.id,
         clientId: client.id,
         firstName: contactFirstName,
         lastName: String(formData.get("contactLastName") ?? "").trim(),
@@ -92,11 +93,13 @@ export async function addProperty(clientId: string, formData: FormData) {
 
 export async function addContact(clientId: string, formData: FormData) {
   await requireUser();
+  const client = await prisma.client.findUniqueOrThrow({ where: { id: clientId } });
   const firstName = String(formData.get("firstName") ?? "").trim();
   if (!firstName) throw new Error("First name is required.");
 
   await prisma.contact.create({
     data: {
+      companyId: client.companyId,
       clientId,
       firstName,
       lastName: String(formData.get("lastName") ?? "").trim(),

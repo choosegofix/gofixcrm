@@ -1,8 +1,10 @@
 import { requireUser } from "@/lib/session";
 import { signOut } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Logo } from "@/components/layout/Logo";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { roleLabels } from "@/lib/labels";
 import type { Role } from "@prisma/client";
 
@@ -12,6 +14,11 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+  const notifications = await prisma.notification.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
 
   return (
     <div className="flex min-h-screen bg-[#FAF7F1]">
@@ -29,6 +36,7 @@ export default async function DashboardLayout({
         <header className="flex items-center justify-between border-b border-[#E3DDD0] bg-white px-6 py-3">
           <MobileNav role={user.role} />
           <div className="ml-auto flex items-center gap-3">
+            <NotificationBell notifications={notifications} />
             <div className="text-right">
               <p className="text-sm font-medium text-[#16233A]">{user.name}</p>
               <p className="text-xs text-[#5B6B82]">{roleLabels[user.role as Role]}</p>

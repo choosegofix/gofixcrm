@@ -57,13 +57,26 @@ export function ActiveJobsMap({ jobs }: { jobs: MapJob[] }) {
           iconAnchor: [7, 7],
         });
 
+        const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}`;
+        const appleMaps = `https://maps.apple.com/?daddr=${job.lat},${job.lng}`;
+        const waze = `https://waze.com/ul?ll=${job.lat},${job.lng}&navigate=yes`;
+        const linkStyle =
+          "display:inline-block;margin-top:4px;margin-right:8px;font-size:12px;color:#D9480F;text-decoration:none;";
+
         const marker = L.marker([job.lat, job.lng], { icon }).addTo(map);
         marker.bindPopup(
-          `<strong>${job.jobNumber} · ${escapeHtml(job.title)}</strong><br/>${escapeHtml(job.clientName)}<br/>${escapeHtml(job.address)}<br/><a href="/jobs/${job.id}" style="color:#D9480F">Open job →</a>`
+          `<div style="min-width:180px">` +
+            `<strong>${job.jobNumber} · ${escapeHtml(job.title)}</strong><br/>` +
+            `${escapeHtml(job.clientName)}<br/>${escapeHtml(job.address)}<br/>` +
+            `<a href="/jobs/${job.id}" style="color:#D9480F;font-weight:600;font-size:13px">Open job →</a>` +
+            `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #E3DDD0">` +
+            `<span style="font-size:11px;color:#8A93A3">Directions:</span><br/>` +
+            `<a href="${gmaps}" target="_blank" rel="noopener noreferrer" style="${linkStyle}">Google Maps</a>` +
+            `<a href="${appleMaps}" target="_blank" rel="noopener noreferrer" style="${linkStyle}">Apple Maps</a>` +
+            `<a href="${waze}" target="_blank" rel="noopener noreferrer" style="${linkStyle}">Waze</a>` +
+            `</div>` +
+            `</div>`
         );
-        marker.on("click", () => {
-          // Popup link handles navigation; this just keeps the marker focused.
-        });
         bounds.push([job.lat, job.lng]);
       }
 

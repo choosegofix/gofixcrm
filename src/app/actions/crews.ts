@@ -31,17 +31,34 @@ export async function createCrew(formData: FormData) {
   );
   const allAreaIds = [...existingAreaIds, ...newAreas.map((a) => a?.id).filter((id): id is string => !!id)];
 
+  const contactEmail = String(formData.get("contactEmail") ?? "") || null;
+  const contactPhone = String(formData.get("contactPhone") ?? "") || null;
+
   const crew = await prisma.crew.create({
     data: {
       companyId: company.id,
       name,
       type,
       trades,
-      contactEmail: String(formData.get("contactEmail") ?? "") || null,
-      contactPhone: String(formData.get("contactPhone") ?? "") || null,
+      contactEmail,
+      contactPhone,
       serviceAreas: {
         create: allAreaIds.map((serviceAreaId) => ({ serviceAreaId })),
       },
+    },
+  });
+
+  // Every crew automatically shows up in the general Contacts directory too.
+  const [firstName, ...rest] = name.split(" ");
+  await prisma.contact.create({
+    data: {
+      companyId: company.id,
+      crewId: crew.id,
+      firstName,
+      lastName: rest.join(" "),
+      title: type === "SUBCONTRACTOR" ? "Subcontractor" : "Crew",
+      email: contactEmail,
+      phone: contactPhone,
     },
   });
 

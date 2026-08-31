@@ -1,25 +1,41 @@
 import Link from "next/link";
+import { Receipt } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireOfficeOrAdmin } from "@/lib/session";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterSelect } from "@/components/ui/FilterSelect";
 import { invoiceStatusColors, invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
+import type { InvoiceStatus } from "@prisma/client";
 
-export default async function InvoicesPage() {
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   await requireOfficeOrAdmin();
   const company = await getCompany();
+  const { status } = await searchParams;
+  const hasFilter = Boolean(status);
 
-  const invoices = await prisma.invoice.findMany({
-    where: { companyId: company.id },
-    orderBy: { createdAt: "desc" },
-    include: { client: true },
-  });
+  const [invoices, allInvoices] = await Promise.all([
+    prisma.invoice.findMany({
+      where: { companyId: company.id, ...(status ? { status: status as InvoiceStatus } : {}) },
+      orderBy: { createdAt: "desc" },
+      include: { client: true },
+    }),
+    prisma.invoice.findMany({
+      where: { companyId: company.id },
+      select: { status: true, total: true, amountPaid: true },
+    }),
+  ]);
 
-  const outstanding = invoices
+  const outstanding = allInvoices
     .filter((i) => i.status === "SENT" || i.status === "PARTIALLY_PAID" || i.status === "OVERDUE")
     .reduce((sum, i) => sum + (Number(i.total) - Number(i.amountPaid)), 0);
 
@@ -33,10 +49,29 @@ export default async function InvoicesPage() {
         <LinkButton href="/invoices/new">+ New invoice</LinkButton>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterSelect
+          paramName="status"
+          label="Status"
+          allLabel="All statuses"
+          options={Object.entries(invoiceStatusLabels).map(([value, label]) => ({ value, label }))}
+        />
+      </div>
+
       <Card>
         <CardBody className="p-0">
           {invoices.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-[#5B6B82]">No invoices yet.</p>
+            <EmptyState
+              icon={Receipt}
+              title={hasFilter ? "No invoices match this filter" : "No invoices yet"}
+              description={
+                hasFilter
+                  ? "Try a different status, or clear the filter to see every invoice."
+                  : "Invoices are generated from a completed job."
+              }
+              actionHref={hasFilter ? "/invoices" : "/invoices/new"}
+              actionLabel={hasFilter ? "Clear filter" : "+ New invoice"}
+            />
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">

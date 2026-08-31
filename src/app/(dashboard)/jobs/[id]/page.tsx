@@ -4,6 +4,9 @@ import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
 import { assignToJob } from "@/app/actions/jobs";
 import { createVisit } from "@/app/actions/visits";
+import { createTask, applyTemplateToJob } from "@/app/actions/tasks";
+import { addTagToJob, removeTagFromJob } from "@/app/actions/tags";
+import { createJobComment } from "@/app/actions/comments";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
@@ -17,6 +20,8 @@ import {
 } from "@/lib/labels";
 import { JobStatusSelect, VisitStatusSelect, RemoveAssignmentButton } from "@/components/jobs/StatusControls";
 import { ScheduleVisitButton } from "@/components/jobs/ScheduleVisitButton";
+import { TaskCheckbox } from "@/components/jobs/TaskCheckbox";
+import { CommentComposer, type Mentionable } from "@/components/jobs/CommentComposer";
 import { LinkButton } from "@/components/ui/Button";
 import { invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
@@ -24,7 +29,7 @@ import { TicketHeader } from "@/components/ui/TicketHeader";
 import { hasJobAccess } from "@/lib/jobAccess";
 import { areaColor } from "@/lib/serviceArea";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 export default async function JobDetailPage({
   params,
@@ -44,13 +49,16 @@ export default async function JobDetailPage({
       visits: { orderBy: { scheduledStart: "asc" } },
       assignments: { include: { user: true, crew: true } },
       invoices: { orderBy: { createdAt: "desc" } },
+      tasks: { orderBy: { sortOrder: "asc" } },
+      tags: { include: { tag: true } },
+      comments: { orderBy: { createdAt: "asc" }, include: { author: true } },
     },
   });
 
   if (!job) notFound();
   if (user.role === "SUBCONTRACTOR" && !(await hasJobAccess(user.id, job.id))) notFound();
 
-  const [users, crewsRaw] = await Promise.all([
+  const [users, crewsRaw, allTags, templates] = await Promise.all([
     prisma.user.findMany({
       where: { companyId: company.id, isActive: true, role: { in: ["FIELD", "SUBCONTRACTOR", "OFFICE"] } },
       orderBy: { name: "asc" },
@@ -60,7 +68,19 @@ export default async function JobDetailPage({
       orderBy: { name: "asc" },
       include: { serviceAreas: true },
     }),
+    prisma.tag.findMany({ where: { companyId: company.id }, orderBy: { name: "asc" } }),
+    prisma.taskTemplate.findMany({
+      where: { companyId: company.id, OR: [{ trade: job.trade }, { trade: null }] },
+      orderBy: { name: "asc" },
+    }),
   ]);
+
+  const mentionables: Mentionable[] = [
+    ...users.map((u) => ({ id: u.id, type: "user" as const, name: u.name })),
+    ...crewsRaw.map((c) => ({ id: c.id, type: "crew" as const, name: c.name })),
+  ];
+  const jobTagIds = new Set(job.tags.map((t) => t.tagId));
+  const availableTags = allTags.filter((t) => !jobTagIds.has(t.id));
 
   // Crews covering this job's area are surfaced first, so dispatching to a
   // local crew is the path of least resistance.
@@ -76,6 +96,13 @@ export default async function JobDetailPage({
 
   const createVisitForJob = createVisit.bind(null, job.id);
   const assignToThisJob = assignToJob.bind(null, job.id);
+  const createTaskForJob = createTask.bind(null, job.id);
+  const applyTemplateForJob = applyTemplateToJob.bind(null, job.id);
+  const addTagForJob = addTagToJob.bind(null, job.id);
+  const createCommentForJob = createJobComment.bind(null, job.id);
+
+  const openTasks = job.tasks.filter((t) => t.status === "OPEN");
+  const completedTasks = job.tasks.filter((t) => t.status === "COMPLETED");
 
   return (
     <div className="space-y-6">
@@ -107,6 +134,57 @@ export default async function JobDetailPage({
           From quote {job.quote.quoteNumber} →
         </Link>
       )}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        {job.tags.map((t) => (
+          <span
+            key={t.tagId}
+            className="group inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium"
+            style={{
+              backgroundColor: `${t.tag.color}1a`,
+              borderColor: `${t.tag.color}55`,
+              color: t.tag.color,
+            }}
+          >
+            {t.tag.name}
+            <form action={removeTagFromJob.bind(null, job.id, t.tagId)}>
+              <button type="submit" className="opacity-60 hover:opacity-100" aria-label={`Remove ${t.tag.name}`}>
+                ✕
+              </button>
+            </form>
+          </span>
+        ))}
+        <details className="text-xs">
+          <summary className="cursor-pointer rounded-full border border-dashed border-[#DDD6C7] px-2.5 py-0.5 font-medium text-[#5B6B82] hover:border-[#D9480F] hover:text-[#D9480F]">
+            + Tag
+          </summary>
+          <form action={addTagForJob} className="mt-2 flex items-center gap-2 rounded-md border border-[#E3DDD0] bg-white p-2 shadow-sm">
+            {availableTags.length > 0 && (
+              <select
+                name="tagId"
+                className="rounded border border-[#DDD6C7] px-2 py-1 text-xs"
+                defaultValue=""
+              >
+                <option value="">— pick existing —</option>
+                {availableTags.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <input
+              type="text"
+              name="newTagName"
+              placeholder="or type a new tag"
+              className="w-32 rounded border border-[#DDD6C7] px-2 py-1 text-xs"
+            />
+            <button type="submit" className="rounded bg-[#D9480F] px-2 py-1 text-xs font-medium text-white">
+              Add
+            </button>
+          </form>
+        </details>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -142,6 +220,73 @@ export default async function JobDetailPage({
                 </ul>
               )}
               <ScheduleVisitButton action={createVisitForJob} />
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Checklist"
+              subtitle={`${completedTasks.length} of ${job.tasks.length} done`}
+              action={
+                templates.length > 0 ? (
+                  <form action={applyTemplateForJob} className="flex items-center gap-2">
+                    <select
+                      name="templateId"
+                      className="rounded-md border border-[#DDD6C7] px-2 py-1 text-xs text-[#16233A]"
+                      defaultValue=""
+                      required
+                    >
+                      <option value="" disabled>
+                        Apply a template…
+                      </option>
+                      {templates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="submit" className="text-xs font-medium text-[#D9480F] hover:underline">
+                      Apply
+                    </button>
+                  </form>
+                ) : undefined
+              }
+            />
+            <CardBody className="space-y-3">
+              {job.tasks.length > 0 && (
+                <ul className="space-y-1.5">
+                  {[...openTasks, ...completedTasks].map((t) => (
+                    <li key={t.id} className="flex items-center gap-2 rounded-md border border-[#EFEAE0] px-3 py-2 text-sm">
+                      <TaskCheckbox jobId={job.id} taskId={t.id} completed={t.status === "COMPLETED"} />
+                      <span
+                        className={t.status === "COMPLETED" ? "flex-1 text-[#8A93A3] line-through" : "flex-1 text-[#16233A]"}
+                      >
+                        {t.title}
+                      </span>
+                      {t.requiresPhoto && (
+                        <span className="text-xs text-[#8A5A19]" title="Photo required">
+                          📷
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <form action={createTaskForJob} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="Add a task…"
+                  required
+                  className="flex-1 rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F]"
+                />
+                <label className="flex items-center gap-1 text-xs text-[#5B6B82]">
+                  <input type="checkbox" name="requiresPhoto" /> Photo
+                </label>
+                <Button type="submit" size="sm">
+                  Add
+                </Button>
+              </form>
             </CardBody>
           </Card>
 
@@ -243,6 +388,36 @@ export default async function JobDetailPage({
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader title="Comments" subtitle="@mention a person or a whole crew to notify them" />
+        <CardBody className="space-y-4">
+          {job.comments.length > 0 && (
+            <ul className="space-y-3">
+              {job.comments.map((c) => (
+                <li key={c.id} className="rounded-md border border-[#EFEAE0] px-3 py-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-[#16233A]">{c.author.name}</p>
+                    <p className="text-xs text-[#8A93A3]">{formatDistanceToNow(c.createdAt, { addSuffix: true })}</p>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-[#3A4A5F]">
+                    {c.body.split(/(@[\w]+(?:\s[\w]+)?)/g).map((part, i) =>
+                      part.startsWith("@") ? (
+                        <span key={i} className="font-medium text-[#D9480F]">
+                          {part}
+                        </span>
+                      ) : (
+                        <span key={i}>{part}</span>
+                      )
+                    )}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <CommentComposer action={createCommentForJob} mentionables={mentionables} />
+        </CardBody>
+      </Card>
     </div>
   );
 }
