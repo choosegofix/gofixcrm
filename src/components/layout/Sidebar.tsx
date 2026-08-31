@@ -12,6 +12,7 @@ import {
   Receipt,
   HardHat,
   Settings,
+  MapPin,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ const navItems: { href: string; label: string; icon: LucideIcon; roles: string[]
   { href: "/quotes", label: "Quotes", icon: FileText, roles: ["ADMIN", "OFFICE"] },
   { href: "/jobs", label: "Jobs", icon: ClipboardList, roles: ["ADMIN", "OFFICE", "FIELD", "SUBCONTRACTOR"] },
   { href: "/schedule", label: "Schedule", icon: Calendar, roles: ["ADMIN", "OFFICE", "FIELD", "SUBCONTRACTOR"] },
+  { href: "/map", label: "Map", icon: MapPin, roles: ["ADMIN", "OFFICE", "FIELD", "SUBCONTRACTOR"] },
   { href: "/invoices", label: "Invoices", icon: Receipt, roles: ["ADMIN", "OFFICE"] },
   { href: "/crews", label: "Crews", icon: HardHat, roles: ["ADMIN", "OFFICE"] },
   { href: "/settings/users", label: "Team & Settings", icon: Settings, roles: ["ADMIN"] },

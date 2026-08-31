@@ -2,13 +2,13 @@ import Link from "next/link";
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function ClientsPage() {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
 
   const clients = await prisma.client.findMany({

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { addContact, addProperty } from "@/app/actions/clients";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
@@ -14,7 +14,7 @@ export default async function ClientDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const { id } = await params;
 
   const client = await prisma.client.findUnique({

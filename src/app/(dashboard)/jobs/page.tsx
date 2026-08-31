@@ -7,6 +7,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getAssignedJobIds } from "@/lib/jobAccess";
 import {
   jobStatusColors,
   jobStatusLabels,
@@ -22,14 +23,17 @@ export default async function JobsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const company = await getCompany();
   const { status } = await searchParams;
+
+  const assignedJobIds = user.role === "SUBCONTRACTOR" ? await getAssignedJobIds(user.id) : null;
 
   const jobs = await prisma.job.findMany({
     where: {
       companyId: company.id,
       ...(status ? { status: status as JobStatus } : {}),
+      ...(assignedJobIds ? { id: { in: assignedJobIds } } : {}),
     },
     orderBy: { createdAt: "desc" },
     include: { client: true, property: true },
@@ -42,7 +46,7 @@ export default async function JobsPage({
           <h1 className="text-xl font-semibold text-[#16233A]">Jobs</h1>
           <p className="text-sm text-[#5B6B82]">{jobs.length} jobs</p>
         </div>
-        <LinkButton href="/jobs/new">+ New job</LinkButton>
+        {user.role !== "SUBCONTRACTOR" && <LinkButton href="/jobs/new">+ New job</LinkButton>}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -76,9 +80,11 @@ export default async function JobsPage({
               description={
                 status
                   ? "Try a different status, or clear the filter to see every job."
-                  : "Create a job directly, or approve a quote to generate one automatically."
+                  : user.role === "SUBCONTRACTOR"
+                    ? "You'll see jobs here once the office assigns one to you."
+                    : "Create a job directly, or approve a quote to generate one automatically."
               }
-              actionHref={status ? "/jobs" : "/jobs/new"}
+              actionHref={status ? "/jobs" : user.role === "SUBCONTRACTOR" ? undefined : "/jobs/new"}
               actionLabel={status ? "Clear filter" : "+ New job"}
             />
           ) : (

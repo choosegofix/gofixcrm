@@ -56,6 +56,32 @@ async function main() {
     },
   });
 
+  const subcontractor = await prisma.user.upsert({
+    where: { email: "sub@brightsparkelectric.example" },
+    update: {},
+    create: {
+      companyId: company.id,
+      name: "Mo Aziz (Subcontractor)",
+      email: "sub@brightsparkelectric.example",
+      passwordHash,
+      role: "SUBCONTRACTOR",
+    },
+  });
+
+  const areaNames = ["Toronto", "North York", "Scarborough", "Mississauga", "Vaughan", "Markham"];
+  const areas = Object.fromEntries(
+    await Promise.all(
+      areaNames.map(async (name) => {
+        const area = await prisma.serviceArea.upsert({
+          where: { companyId_name: { companyId: company.id, name } },
+          update: {},
+          create: { companyId: company.id, name },
+        });
+        return [name, area] as const;
+      })
+    )
+  );
+
   const crew = await prisma.crew.upsert({
     where: { id: "crew-1" },
     update: {},
@@ -65,6 +91,7 @@ async function main() {
       name: "Crew 1 — Dave & Mo",
       type: "INTERNAL",
       trades: ["HVAC", "ELECTRICAL"],
+      serviceAreas: { create: [{ serviceAreaId: areas["Toronto"].id }, { serviceAreaId: areas["North York"].id }] },
     },
   });
 
@@ -72,6 +99,26 @@ async function main() {
     where: { crewId_userId: { crewId: crew.id, userId: tech.id } },
     update: {},
     create: { crewId: crew.id, userId: tech.id },
+  });
+
+  const subCrew = await prisma.crew.upsert({
+    where: { id: "crew-subcontractor-1" },
+    update: {},
+    create: {
+      id: "crew-subcontractor-1",
+      companyId: company.id,
+      name: "BrightSpark Electric",
+      type: "SUBCONTRACTOR",
+      trades: ["ELECTRICAL"],
+      contactEmail: "dispatch@brightsparkelectric.example",
+      serviceAreas: { create: [{ serviceAreaId: areas["Toronto"].id }] },
+    },
+  });
+
+  await prisma.crewMember.upsert({
+    where: { crewId_userId: { crewId: subCrew.id, userId: subcontractor.id } },
+    update: {},
+    create: { crewId: subCrew.id, userId: subcontractor.id },
   });
 
   const clientA = await prisma.client.upsert({
@@ -105,7 +152,7 @@ async function main() {
 
   const propertyA = await prisma.property.upsert({
     where: { id: "property-maple-ridge-1" },
-    update: {},
+    update: { serviceAreaId: areas["Toronto"].id, lat: 43.6488, lng: -79.3776 },
     create: {
       id: "property-maple-ridge-1",
       clientId: clientA.id,
@@ -114,6 +161,9 @@ async function main() {
       city: "Toronto",
       province: "ON",
       postalCode: "M5C 2W1",
+      serviceAreaId: areas["Toronto"].id,
+      lat: 43.6488,
+      lng: -79.3776,
       accessNotes: "Loading dock code: 4471#. Check in with concierge.",
     },
   });
@@ -146,7 +196,7 @@ async function main() {
 
   const propertyB = await prisma.property.upsert({
     where: { id: "property-riverside-1" },
-    update: {},
+    update: { serviceAreaId: areas["Toronto"].id, lat: 43.6656, lng: -79.4093 },
     create: {
       id: "property-riverside-1",
       clientId: clientB.id,
@@ -154,6 +204,9 @@ async function main() {
       city: "Toronto",
       province: "ON",
       postalCode: "M5S 1X8",
+      serviceAreaId: areas["Toronto"].id,
+      lat: 43.6656,
+      lng: -79.4093,
     },
   });
 
@@ -201,9 +254,13 @@ async function main() {
     },
   });
 
-  await prisma.job.upsert({
+  const jobElectrical = await prisma.job.upsert({
     where: { id: "job-1002" },
-    update: {},
+    update: {
+      status: "SCHEDULED",
+      scheduledStart: new Date(Date.now() + 1000 * 60 * 60 * 48),
+      scheduledEnd: new Date(Date.now() + 1000 * 60 * 60 * 50),
+    },
     create: {
       id: "job-1002",
       companyId: company.id,
@@ -213,9 +270,22 @@ async function main() {
       title: "Exam room outlet not working",
       description: "GFCI outlet in exam room 2 keeps tripping.",
       trade: "ELECTRICAL",
-      status: "REQUESTED",
+      status: "SCHEDULED",
       pricingResponsibility: "SUBCONTRACTOR_PRICED",
+      scheduledStart: new Date(Date.now() + 1000 * 60 * 60 * 48),
+      scheduledEnd: new Date(Date.now() + 1000 * 60 * 60 * 50),
       createdByUserId: dispatcher.id,
+    },
+  });
+
+  await prisma.jobAssignment.upsert({
+    where: { id: "assignment-1002-1" },
+    update: {},
+    create: {
+      id: "assignment-1002-1",
+      jobId: jobElectrical.id,
+      crewId: subCrew.id,
+      role: "Lead",
     },
   });
 
@@ -225,6 +295,7 @@ async function main() {
   console.log(`    ${admin.email} — Admin`);
   console.log(`    ${dispatcher.email} — Office`);
   console.log(`    ${tech.email} — Field`);
+  console.log(`    ${subcontractor.email} — Subcontractor (assigned to J-1002 only)`);
 }
 
 main()

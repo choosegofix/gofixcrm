@@ -3,6 +3,7 @@ import { ClipboardList, DollarSign, AlertCircle, CalendarClock } from "lucide-re
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
+import { getAssignedJobIds } from "@/lib/jobAccess";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { jobStatusColors, jobStatusLabels, tradeColors, tradeLabels } from "@/lib/labels";
@@ -12,15 +13,18 @@ import { format } from "date-fns";
 export default async function DashboardPage() {
   const user = await requireUser();
   const company = await getCompany();
+  const isSubcontractor = user.role === "SUBCONTRACTOR";
+  const assignedJobIds = isSubcontractor ? await getAssignedJobIds(user.id) : null;
+  const jobScope = assignedJobIds ? { id: { in: assignedJobIds } } : {};
 
   const [jobsInProgress, upcomingVisits, outstandingInvoices, paidThisMonth, recentJobs] =
     await Promise.all([
       prisma.job.count({
-        where: { companyId: company.id, status: { in: ["SCHEDULED", "IN_PROGRESS"] } },
+        where: { companyId: company.id, status: { in: ["SCHEDULED", "IN_PROGRESS"] }, ...jobScope },
       }),
       prisma.visit.findMany({
         where: {
-          job: { companyId: company.id },
+          job: { companyId: company.id, ...jobScope },
           scheduledStart: { gte: new Date() },
           status: "SCHEDULED",
         },
@@ -28,33 +32,46 @@ export default async function DashboardPage() {
         take: 5,
         include: { job: { include: { client: true } } },
       }),
-      prisma.invoice.aggregate({
-        where: { companyId: company.id, status: { in: ["SENT", "PARTIALLY_PAID", "OVERDUE"] } },
-        _sum: { total: true, amountPaid: true },
-      }),
-      prisma.payment.aggregate({
-        where: {
-          client: { companyId: company.id },
-          paidAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
-        },
-        _sum: { amount: true },
-      }),
+      isSubcontractor
+        ? null
+        : prisma.invoice.aggregate({
+            where: { companyId: company.id, status: { in: ["SENT", "PARTIALLY_PAID", "OVERDUE"] } },
+            _sum: { total: true, amountPaid: true },
+          }),
+      isSubcontractor
+        ? null
+        : prisma.payment.aggregate({
+            where: {
+              client: { companyId: company.id },
+              paidAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
+            },
+            _sum: { amount: true },
+          }),
       prisma.job.findMany({
-        where: { companyId: company.id },
+        where: { companyId: company.id, ...jobScope },
         orderBy: { createdAt: "desc" },
         take: 6,
         include: { client: true },
       }),
     ]);
 
-  const outstanding =
-    Number(outstandingInvoices._sum.total ?? 0) - Number(outstandingInvoices._sum.amountPaid ?? 0);
+  const outstanding = outstandingInvoices
+    ? Number(outstandingInvoices._sum.total ?? 0) - Number(outstandingInvoices._sum.amountPaid ?? 0)
+    : 0;
 
   const stats = [
     { label: "Jobs in progress", value: String(jobsInProgress), icon: ClipboardList },
-    { label: "Revenue this month", value: formatCurrency(paidThisMonth._sum.amount ?? 0), icon: DollarSign },
-    { label: "Outstanding invoices", value: formatCurrency(outstanding), icon: AlertCircle },
     { label: "Upcoming visits", value: String(upcomingVisits.length), icon: CalendarClock },
+    ...(isSubcontractor
+      ? []
+      : [
+          { label: "Outstanding invoices", value: formatCurrency(outstanding), icon: AlertCircle },
+          {
+            label: "Revenue this month",
+            value: formatCurrency(paidThisMonth?._sum.amount ?? 0),
+            icon: DollarSign,
+          },
+        ]),
   ];
 
   return (
@@ -115,7 +132,7 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader
-            title="Recent jobs"
+            title={isSubcontractor ? "Your jobs" : "Recent jobs"}
             action={
               <Link href="/jobs" className="text-sm font-medium text-[#D9480F] hover:underline">
                 View all

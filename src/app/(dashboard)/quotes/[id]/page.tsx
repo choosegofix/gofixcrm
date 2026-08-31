@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { quoteStatusColors, quoteStatusLabels, tradeColors, tradeLabels } from "@/lib/labels";
@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/currency";
 import { QuoteActions } from "@/components/quotes/QuoteActions";
 import { DepositForm } from "@/components/quotes/DepositForm";
 import { TicketHeader } from "@/components/ui/TicketHeader";
+import { areaColor } from "@/lib/serviceArea";
 import { format } from "date-fns";
 
 export default async function QuoteDetailPage({
@@ -16,14 +17,14 @@ export default async function QuoteDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const { id } = await params;
 
   const quote = await prisma.quote.findUnique({
     where: { id },
     include: {
       client: true,
-      property: true,
+      property: { include: { serviceArea: true } },
       lineItems: { orderBy: { sortOrder: "asc" } },
       job: true,
     },
@@ -52,6 +53,11 @@ export default async function QuoteDetailPage({
         action={
           <div className="flex flex-wrap justify-end gap-1.5">
             <Badge className={tradeColors[quote.trade]}>{tradeLabels[quote.trade]}</Badge>
+            {quote.property.serviceArea && (
+              <Badge className={areaColor(quote.property.serviceArea.name)}>
+                {quote.property.serviceArea.name}
+              </Badge>
+            )}
           </div>
         }
       />

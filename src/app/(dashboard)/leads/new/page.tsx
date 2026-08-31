@@ -1,14 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { createLead } from "@/app/actions/leads";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { ClientPropertySelect } from "@/components/jobs/ClientPropertySelect";
+import { LeadSourceSelect } from "@/components/leads/LeadSourceSelect";
 
 export default async function NewLeadPage() {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
 
   const clients = await prisma.client.findMany({
@@ -28,8 +29,8 @@ export default async function NewLeadPage() {
               <FormField label="Contact name" htmlFor="contactName" required>
                 <Input id="contactName" name="contactName" required />
               </FormField>
-              <FormField label="Source" htmlFor="source" hint="Phone, website form, referral...">
-                <Input id="source" name="source" />
+              <FormField label="Lead source" htmlFor="source">
+                <LeadSourceSelect />
               </FormField>
               <FormField label="Email" htmlFor="contactEmail">
                 <Input id="contactEmail" name="contactEmail" type="email" />
@@ -39,6 +40,13 @@ export default async function NewLeadPage() {
               </FormField>
             </div>
             <ClientPropertySelect clients={clients} clientOptional />
+            <FormField
+              label="City"
+              htmlFor="city"
+              hint="Leave blank to use the selected property's city. Required for a brand-new prospect."
+            >
+              <Input id="city" name="city" placeholder="e.g. Scarborough" />
+            </FormField>
           </CardBody>
         </Card>
 

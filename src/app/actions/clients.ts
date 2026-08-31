@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
+import { findOrCreateServiceArea } from "@/lib/serviceArea";
+import { geocodeAddress } from "@/lib/geocode";
 import type { CommPreference } from "@prisma/client";
 
 export async function createClient(formData: FormData) {
@@ -24,13 +26,19 @@ export async function createClient(formData: FormData) {
 
   const addressLine1 = String(formData.get("addressLine1") ?? "").trim();
   if (addressLine1) {
+    const city = String(formData.get("city") ?? "").trim() || "Toronto";
+    const serviceArea = await findOrCreateServiceArea(company.id, city);
+    const coords = await geocodeAddress(`${addressLine1}, ${city}, ON, Canada`);
     await prisma.property.create({
       data: {
         clientId: client.id,
         label: String(formData.get("propertyLabel") ?? "") || null,
         addressLine1,
-        city: String(formData.get("city") ?? "").trim() || "Toronto",
+        city,
+        serviceAreaId: serviceArea?.id,
         postalCode: String(formData.get("postalCode") ?? "") || null,
+        lat: coords?.lat,
+        lng: coords?.lng,
       },
     });
   }
@@ -56,8 +64,13 @@ export async function createClient(formData: FormData) {
 
 export async function addProperty(clientId: string, formData: FormData) {
   await requireUser();
+  const client = await prisma.client.findUniqueOrThrow({ where: { id: clientId } });
   const addressLine1 = String(formData.get("addressLine1") ?? "").trim();
   if (!addressLine1) throw new Error("Street address is required.");
+
+  const city = String(formData.get("city") ?? "").trim() || "Toronto";
+  const serviceArea = await findOrCreateServiceArea(client.companyId, city);
+  const coords = await geocodeAddress(`${addressLine1}, ${city}, ON, Canada`);
 
   await prisma.property.create({
     data: {
@@ -65,9 +78,12 @@ export async function addProperty(clientId: string, formData: FormData) {
       label: String(formData.get("label") ?? "") || null,
       addressLine1,
       addressLine2: String(formData.get("addressLine2") ?? "") || null,
-      city: String(formData.get("city") ?? "").trim() || "Toronto",
+      city,
+      serviceAreaId: serviceArea?.id,
       postalCode: String(formData.get("postalCode") ?? "") || null,
       accessNotes: String(formData.get("accessNotes") ?? "") || null,
+      lat: coords?.lat,
+      lng: coords?.lng,
     },
   });
 

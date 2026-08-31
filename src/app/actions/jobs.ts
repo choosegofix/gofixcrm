@@ -7,22 +7,74 @@ import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { formatRecordNumber } from "@/lib/numbers";
+import { requireJobAccess } from "@/lib/jobAccess";
+import { findOrCreateServiceArea } from "@/lib/serviceArea";
+import { geocodeAddress } from "@/lib/geocode";
 import type { JobStatus, Trade, PricingResponsibility } from "@prisma/client";
 
 export async function createJob(formData: FormData) {
   const user = await requireUser();
+  if (user.role === "SUBCONTRACTOR") throw new Error("Subcontractors can't create jobs.");
   const company = await getCompany();
 
-  const clientId = String(formData.get("clientId") ?? "");
-  const propertyId = String(formData.get("propertyId") ?? "");
+  let clientId = String(formData.get("clientId") ?? "");
+  let propertyId = String(formData.get("propertyId") ?? "");
+  const newClientName = String(formData.get("newClientName") ?? "").trim();
+  const newAddressLine1 = String(formData.get("newAddressLine1") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const trade = String(formData.get("trade") ?? "") as Trade;
   const pricingResponsibility = String(
     formData.get("pricingResponsibility") ?? "COMPANY_PRICED"
   ) as PricingResponsibility;
 
-  if (!clientId || !propertyId || !title || !trade) {
-    throw new Error("Client, property, title, and trade are all required.");
+  if (!title || !trade) {
+    throw new Error("Title and trade are required.");
+  }
+
+  // Inline "+ New client…" — create the client (and its first property) on the fly.
+  if (newClientName) {
+    if (!newAddressLine1) throw new Error("A street address is required for a new client.");
+    const client = await prisma.client.create({
+      data: { companyId: company.id, name: newClientName },
+    });
+    const city = String(formData.get("newCity") ?? "").trim() || "Toronto";
+    const serviceArea = await findOrCreateServiceArea(company.id, city);
+    const coords = await geocodeAddress(`${newAddressLine1}, ${city}, ON, Canada`);
+    const property = await prisma.property.create({
+      data: {
+        clientId: client.id,
+        addressLine1: newAddressLine1,
+        city,
+        serviceAreaId: serviceArea?.id,
+        postalCode: String(formData.get("newPostalCode") ?? "") || null,
+        lat: coords?.lat,
+        lng: coords?.lng,
+      },
+    });
+    clientId = client.id;
+    propertyId = property.id;
+  } else if (newAddressLine1) {
+    // Inline "+ New property…" for an existing client.
+    if (!clientId) throw new Error("Select a client for the new property.");
+    const city = String(formData.get("newCity") ?? "").trim() || "Toronto";
+    const serviceArea = await findOrCreateServiceArea(company.id, city);
+    const coords = await geocodeAddress(`${newAddressLine1}, ${city}, ON, Canada`);
+    const property = await prisma.property.create({
+      data: {
+        clientId,
+        addressLine1: newAddressLine1,
+        city,
+        serviceAreaId: serviceArea?.id,
+        postalCode: String(formData.get("newPostalCode") ?? "") || null,
+        lat: coords?.lat,
+        lng: coords?.lng,
+      },
+    });
+    propertyId = property.id;
+  }
+
+  if (!clientId || !propertyId) {
+    throw new Error("Client and property are required.");
   }
 
   const jobCount = await prisma.job.count({ where: { companyId: company.id } });
@@ -54,6 +106,7 @@ export async function createJob(formData: FormData) {
 
 export async function updateJobStatus(jobId: string, status: JobStatus) {
   const user = await requireUser();
+  await requireJobAccess(user, jobId);
   const job = await prisma.job.findUniqueOrThrow({ where: { id: jobId } });
 
   const timestampField: Record<string, Date> = {};
@@ -81,6 +134,7 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
 
 export async function assignToJob(jobId: string, formData: FormData) {
   const user = await requireUser();
+  if (user.role === "SUBCONTRACTOR") throw new Error("Only office staff can assign crews.");
   const userId = String(formData.get("userId") ?? "") || undefined;
   const crewId = String(formData.get("crewId") ?? "") || undefined;
   const role = String(formData.get("role") ?? "") || undefined;
@@ -105,7 +159,8 @@ export async function assignToJob(jobId: string, formData: FormData) {
 }
 
 export async function removeAssignment(jobId: string, assignmentId: string) {
-  await requireUser();
+  const user = await requireUser();
+  if (user.role === "SUBCONTRACTOR") throw new Error("Only office staff can change assignments.");
   await prisma.jobAssignment.delete({ where: { id: assignmentId } });
   revalidatePath(`/jobs/${jobId}`);
 }

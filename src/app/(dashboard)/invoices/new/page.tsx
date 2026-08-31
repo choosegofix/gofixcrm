@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { createInvoice } from "@/app/actions/invoices";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
@@ -12,7 +12,7 @@ export default async function NewInvoicePage({
 }: {
   searchParams: Promise<{ jobId?: string }>;
 }) {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
   const { jobId } = await searchParams;
 

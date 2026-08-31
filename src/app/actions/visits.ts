@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
+import { requireJobAccess } from "@/lib/jobAccess";
 import type { VisitStatus } from "@prisma/client";
 
 export async function createVisit(jobId: string, formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
+  await requireJobAccess(user, jobId);
 
   const scheduledStart = String(formData.get("scheduledStart") ?? "");
   const scheduledEnd = String(formData.get("scheduledEnd") ?? "");
@@ -44,7 +46,8 @@ export async function createVisit(jobId: string, formData: FormData) {
 }
 
 export async function updateVisitStatus(jobId: string, visitId: string, status: VisitStatus) {
-  await requireUser();
+  const user = await requireUser();
+  await requireJobAccess(user, jobId);
 
   const data: { status: VisitStatus; actualStart?: Date; actualEnd?: Date } = { status };
   if (status === "IN_PROGRESS") data.actualStart = new Date();

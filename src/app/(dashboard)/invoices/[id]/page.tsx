@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { invoiceStatusColors, invoiceStatusLabels } from "@/lib/labels";
@@ -15,13 +15,13 @@ export default async function InvoiceDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const { id } = await params;
 
   const invoice = await prisma.invoice.findUnique({
     where: { id },
     include: {
-      client: true,
+      client: { include: { contacts: { orderBy: [{ isBilling: "desc" }, { isPrimary: "desc" }] } } },
       job: true,
       lineItems: { orderBy: { sortOrder: "asc" } },
       payments: { orderBy: { paidAt: "desc" } },
@@ -31,6 +31,7 @@ export default async function InvoiceDetailPage({
   if (!invoice) notFound();
 
   const balance = Number(invoice.total) - Number(invoice.amountPaid);
+  const billingContact = invoice.client.contacts[0];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -39,13 +40,18 @@ export default async function InvoiceDetailPage({
         number={invoice.invoiceNumber}
         title={invoice.client.name}
         meta={
-          invoice.job ? (
-            <Link href={`/jobs/${invoice.job.id}`} className="text-[#D9480F] hover:underline">
-              {invoice.job.jobNumber} · {invoice.job.title}
-            </Link>
-          ) : (
-            `Issued ${format(invoice.issueDate, "MMM d, yyyy")} · Due ${format(invoice.dueDate, "MMM d, yyyy")}`
-          )
+          <>
+            {invoice.job && (
+              <Link href={`/jobs/${invoice.job.id}`} className="text-[#D9480F] hover:underline">
+                {invoice.job.jobNumber} · {invoice.job.title}
+              </Link>
+            )}
+            {billingContact && (billingContact.email || billingContact.phone) && (
+              <span className="block text-[#5B6B82]">
+                {[billingContact.email, billingContact.phone].filter(Boolean).join(" · ")}
+              </span>
+            )}
+          </>
         }
         status={
           <Badge className={invoiceStatusColors[invoice.status]}>

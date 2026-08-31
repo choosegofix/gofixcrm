@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+import { getCompany } from "@/lib/company";
 import { requireOfficeOrAdmin } from "@/lib/session";
 import { createCrew } from "@/app/actions/crews";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -6,6 +8,12 @@ import { Button } from "@/components/ui/Button";
 
 export default async function NewCrewPage() {
   await requireOfficeOrAdmin();
+  const company = await getCompany();
+
+  const areas = await prisma.serviceArea.findMany({
+    where: { companyId: company.id },
+    orderBy: { name: "asc" },
+  });
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -35,6 +43,28 @@ export default async function NewCrewPage() {
                   <input type="checkbox" name="trades" value="PLUMBING" /> Plumbing
                 </label>
               </div>
+            </FormField>
+            <FormField
+              label="Areas of operation"
+              htmlFor="serviceAreaIds"
+              required
+              hint="Jobs in these areas will surface this crew first when dispatching."
+            >
+              {areas.length > 0 && (
+                <div className="grid grid-cols-2 gap-1.5 rounded-md border border-[#E3DDD0] p-3 text-sm text-[#3A4A5F]">
+                  {areas.map((a) => (
+                    <label key={a.id} className="flex items-center gap-1.5">
+                      <input type="checkbox" name="serviceAreaIds" value={a.id} />
+                      {a.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+              <Input
+                name="newServiceAreas"
+                placeholder="Add new area(s), comma-separated — e.g. Scarborough, Markham"
+                className="mt-2"
+              />
             </FormField>
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Contact email" htmlFor="contactEmail">

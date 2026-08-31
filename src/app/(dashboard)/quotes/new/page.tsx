@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { createQuote } from "@/app/actions/quotes";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
@@ -13,7 +13,7 @@ export default async function NewQuotePage({
 }: {
   searchParams: Promise<{ leadId?: string; clientId?: string }>;
 }) {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
   const { leadId, clientId } = await searchParams;
 

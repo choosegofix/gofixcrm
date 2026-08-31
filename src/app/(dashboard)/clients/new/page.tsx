@@ -1,11 +1,11 @@
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { createClient } from "@/app/actions/clients";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 
 export default async function NewClientPage() {
-  await requireUser();
+  await requireOfficeOrAdmin();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

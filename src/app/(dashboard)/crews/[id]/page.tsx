@@ -1,20 +1,21 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { addCrewMember } from "@/app/actions/crews";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Select } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { crewTypeLabels, tradeColors, tradeLabels } from "@/lib/labels";
+import { areaColor } from "@/lib/serviceArea";
 
 export default async function CrewDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const { id } = await params;
   const company = await getCompany();
 
@@ -23,6 +24,7 @@ export default async function CrewDetailPage({
     include: {
       members: { include: { user: true } },
       jobAssignments: { include: { job: { include: { client: true } } } },
+      serviceAreas: { include: { serviceArea: true } },
     },
   });
 
@@ -45,6 +47,11 @@ export default async function CrewDetailPage({
           {crew.trades.map((t) => (
             <Badge key={t} className={tradeColors[t]}>
               {tradeLabels[t]}
+            </Badge>
+          ))}
+          {crew.serviceAreas.map((sa) => (
+            <Badge key={sa.serviceAreaId} className={areaColor(sa.serviceArea.name)}>
+              {sa.serviceArea.name}
             </Badge>
           ))}
         </div>

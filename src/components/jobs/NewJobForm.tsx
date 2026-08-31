@@ -10,6 +10,9 @@ import type { Client, Property } from "@prisma/client";
 
 type ClientWithProperties = Client & { properties: Property[] };
 
+const NEW_CLIENT = "__new__";
+const NEW_PROPERTY = "__new__";
+
 export function NewJobForm({
   clients,
   initialClientId,
@@ -18,22 +21,10 @@ export function NewJobForm({
   initialClientId?: string;
 }) {
   const [clientId, setClientId] = useState(initialClientId ?? clients[0]?.id ?? "");
+  const [propertyChoice, setPropertyChoice] = useState("");
+  const isNewClient = clientId === NEW_CLIENT;
   const properties = clients.find((c) => c.id === clientId)?.properties ?? [];
-
-  if (clients.length === 0) {
-    return (
-      <Card>
-        <CardBody>
-          <p className="text-sm text-[#5B6B82]">
-            You&apos;ll need a client (and at least one property) before you can create a job.
-          </p>
-          <Link href="/clients/new" className="mt-2 inline-block text-sm font-medium text-[#D9480F] hover:underline">
-            Add a client first →
-          </Link>
-        </CardBody>
-      </Card>
-    );
-  }
+  const showNewPropertyFields = isNewClient || propertyChoice === NEW_PROPERTY;
 
   return (
     <form action={createJob} className="space-y-6">
@@ -41,32 +32,77 @@ export function NewJobForm({
         <CardHeader title="Job details" />
         <CardBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Client" htmlFor="clientId" required>
+            <FormField label="Client" htmlFor="clientSelect" required>
               <Select
-                id="clientId"
-                name="clientId"
-                required
+                id="clientSelect"
                 value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
+                onChange={(e) => {
+                  setClientId(e.target.value);
+                  setPropertyChoice("");
+                }}
               >
+                {clients.length === 0 && <option value="">No clients yet</option>}
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
                 ))}
+                <option value={NEW_CLIENT}>+ New client…</option>
               </Select>
+              {!isNewClient && <input type="hidden" name="clientId" value={clientId} />}
             </FormField>
-            <FormField label="Property" htmlFor="propertyId" required>
-              <Select id="propertyId" name="propertyId" required disabled={properties.length === 0}>
-                {properties.length === 0 && <option value="">No properties on file</option>}
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label || p.addressLine1}
-                  </option>
-                ))}
-              </Select>
-            </FormField>
+
+            {isNewClient ? (
+              <FormField label="New client name" htmlFor="newClientName" required>
+                <Input id="newClientName" name="newClientName" required autoFocus />
+              </FormField>
+            ) : (
+              <FormField label="Property" htmlFor="propertySelect" required>
+                <Select
+                  id="propertySelect"
+                  value={propertyChoice || properties[0]?.id || ""}
+                  onChange={(e) => setPropertyChoice(e.target.value)}
+                  disabled={clients.length === 0}
+                >
+                  {properties.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label || p.addressLine1}
+                    </option>
+                  ))}
+                  <option value={NEW_PROPERTY}>+ New property…</option>
+                </Select>
+                {propertyChoice !== NEW_PROPERTY && (
+                  <input type="hidden" name="propertyId" value={propertyChoice || properties[0]?.id || ""} />
+                )}
+              </FormField>
+            )}
           </div>
+
+          {showNewPropertyFields && (
+            <div className="grid grid-cols-2 gap-4 rounded-md border border-[#E3DDD0] bg-[#FAF7F1] p-4">
+              <div className="col-span-2">
+                <FormField label="Street address" htmlFor="newAddressLine1" required>
+                  <Input id="newAddressLine1" name="newAddressLine1" required placeholder="123 Main St" />
+                </FormField>
+              </div>
+              <FormField label="City" htmlFor="newCity">
+                <Input id="newCity" name="newCity" placeholder="Toronto" />
+              </FormField>
+              <FormField label="Postal code" htmlFor="newPostalCode">
+                <Input id="newPostalCode" name="newPostalCode" />
+              </FormField>
+            </div>
+          )}
+
+          {clients.length === 0 && !isNewClient && (
+            <p className="text-sm text-[#5B6B82]">
+              No clients yet —{" "}
+              <Link href="/clients/new" className="font-medium text-[#D9480F] hover:underline">
+                add one here
+              </Link>{" "}
+              or choose &quot;+ New client…&quot; above.
+            </p>
+          )}
 
           <FormField label="Job title" htmlFor="title" required>
             <Input id="title" name="title" required placeholder="e.g. Rooftop unit not cooling" />

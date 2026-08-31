@@ -59,6 +59,21 @@ export const leadStatusLabels: Record<LeadStatus, string> = {
   LOST: "Lost",
 };
 
+const leadSourceLabels: Record<string, string> = {
+  PHONE_CALL: "Phone call",
+  WEBSITE_FORM: "Website form",
+  REFERRAL: "Referral",
+  REPEAT_CUSTOMER: "Repeat customer",
+  GOOGLE_SEARCH: "Google / search",
+  SOCIAL_MEDIA: "Social media",
+  WALK_IN: "Walk-in",
+};
+
+export function formatLeadSource(source: string | null) {
+  if (!source) return null;
+  return leadSourceLabels[source] ?? source;
+}
+
 export const quoteStatusLabels: Record<QuoteStatus, string> = {
   DRAFT: "Draft",
   SENT: "Sent",

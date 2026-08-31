@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/session";
 import { assignToJob } from "@/app/actions/jobs";
 import { createVisit } from "@/app/actions/visits";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
+import { FormField, Input, Select } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -16,10 +16,13 @@ import {
   visitStatusLabels,
 } from "@/lib/labels";
 import { JobStatusSelect, VisitStatusSelect, RemoveAssignmentButton } from "@/components/jobs/StatusControls";
+import { ScheduleVisitButton } from "@/components/jobs/ScheduleVisitButton";
 import { LinkButton } from "@/components/ui/Button";
 import { invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
 import { TicketHeader } from "@/components/ui/TicketHeader";
+import { hasJobAccess } from "@/lib/jobAccess";
+import { areaColor } from "@/lib/serviceArea";
 import Link from "next/link";
 import { format } from "date-fns";
 
@@ -28,7 +31,7 @@ export default async function JobDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await params;
   const company = await getCompany();
 
@@ -36,7 +39,7 @@ export default async function JobDetailPage({
     where: { id },
     include: {
       client: true,
-      property: true,
+      property: { include: { serviceArea: true } },
       quote: true,
       visits: { orderBy: { scheduledStart: "asc" } },
       assignments: { include: { user: true, crew: true } },
@@ -45,14 +48,31 @@ export default async function JobDetailPage({
   });
 
   if (!job) notFound();
+  if (user.role === "SUBCONTRACTOR" && !(await hasJobAccess(user.id, job.id))) notFound();
 
-  const [users, crews] = await Promise.all([
+  const [users, crewsRaw] = await Promise.all([
     prisma.user.findMany({
       where: { companyId: company.id, isActive: true, role: { in: ["FIELD", "SUBCONTRACTOR", "OFFICE"] } },
       orderBy: { name: "asc" },
     }),
-    prisma.crew.findMany({ where: { companyId: company.id, isActive: true }, orderBy: { name: "asc" } }),
+    prisma.crew.findMany({
+      where: { companyId: company.id, isActive: true },
+      orderBy: { name: "asc" },
+      include: { serviceAreas: true },
+    }),
   ]);
+
+  // Crews covering this job's area are surfaced first, so dispatching to a
+  // local crew is the path of least resistance.
+  const crews = [...crewsRaw].sort((a, b) => {
+    const aLocal = job.property.serviceAreaId
+      ? a.serviceAreas.some((sa) => sa.serviceAreaId === job.property.serviceAreaId)
+      : false;
+    const bLocal = job.property.serviceAreaId
+      ? b.serviceAreas.some((sa) => sa.serviceAreaId === job.property.serviceAreaId)
+      : false;
+    return aLocal === bLocal ? 0 : aLocal ? -1 : 1;
+  });
 
   const createVisitForJob = createVisit.bind(null, job.id);
   const assignToThisJob = assignToJob.bind(null, job.id);
@@ -68,6 +88,11 @@ export default async function JobDetailPage({
         action={
           <div className="flex flex-wrap justify-end gap-1.5">
             <Badge className={tradeColors[job.trade]}>{tradeLabels[job.trade]}</Badge>
+            {job.property.serviceArea && (
+              <Badge className={areaColor(job.property.serviceArea.name)}>
+                {job.property.serviceArea.name}
+              </Badge>
+            )}
             <Badge className="border-[#DDD6C7] bg-[#EEEAE1] text-[#5B6B82]">
               {pricingResponsibilityLabels[job.pricingResponsibility]}
             </Badge>
@@ -116,25 +141,7 @@ export default async function JobDetailPage({
                   ))}
                 </ul>
               )}
-              <details className="text-sm">
-                <summary className="cursor-pointer font-medium text-[#D9480F]">+ Schedule a visit</summary>
-                <form action={createVisitForJob} className="mt-3 grid grid-cols-2 gap-3">
-                  <FormField label="Start" htmlFor="scheduledStart" required>
-                    <Input id="scheduledStart" name="scheduledStart" type="datetime-local" required />
-                  </FormField>
-                  <FormField label="End" htmlFor="scheduledEnd" required>
-                    <Input id="scheduledEnd" name="scheduledEnd" type="datetime-local" required />
-                  </FormField>
-                  <div className="col-span-2">
-                    <FormField label="Notes" htmlFor="visitNotes">
-                      <Textarea id="visitNotes" name="notes" rows={2} />
-                    </FormField>
-                  </div>
-                  <div className="col-span-2">
-                    <Button type="submit" size="sm">Add visit</Button>
-                  </div>
-                </form>
-              </details>
+              <ScheduleVisitButton action={createVisitForJob} />
             </CardBody>
           </Card>
 
@@ -185,40 +192,53 @@ export default async function JobDetailPage({
                         <p className="font-medium text-[#16233A]">{a.user?.name ?? a.crew?.name}</p>
                         {a.role && <p className="text-xs text-[#5B6B82]">{a.role}</p>}
                       </div>
-                      <RemoveAssignmentButton jobId={job.id} assignmentId={a.id} />
+                      {user.role !== "SUBCONTRACTOR" && (
+                        <RemoveAssignmentButton jobId={job.id} assignmentId={a.id} />
+                      )}
                     </li>
                   ))}
                 </ul>
               )}
-              <details className="text-sm">
-                <summary className="cursor-pointer font-medium text-[#D9480F]">+ Assign crew or person</summary>
-                <form action={assignToThisJob} className="mt-3 space-y-3">
-                  <FormField label="Team member" htmlFor="userId">
-                    <Select id="userId" name="userId" defaultValue="">
-                      <option value="">— none —</option>
-                      {users.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormField>
-                  <FormField label="Or a crew" htmlFor="crewId">
-                    <Select id="crewId" name="crewId" defaultValue="">
-                      <option value="">— none —</option>
-                      {crews.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormField>
-                  <FormField label="Role" htmlFor="role" hint="e.g. Lead, Helper">
-                    <Input id="role" name="role" />
-                  </FormField>
-                  <Button type="submit" size="sm">Assign</Button>
-                </form>
-              </details>
+              {user.role !== "SUBCONTRACTOR" && (
+                <details className="text-sm">
+                  <summary className="cursor-pointer font-medium text-[#D9480F]">+ Assign crew or person</summary>
+                  <form action={assignToThisJob} className="mt-3 space-y-3">
+                    <FormField label="Team member" htmlFor="userId">
+                      <Select id="userId" name="userId" defaultValue="">
+                        <option value="">— none —</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                    <FormField
+                      label="Or a crew"
+                      htmlFor="crewId"
+                      hint={job.property.serviceArea ? "Local crews for this area are listed first" : undefined}
+                    >
+                      <Select id="crewId" name="crewId" defaultValue="">
+                        <option value="">— none —</option>
+                        {crews.map((c) => {
+                          const isLocal = job.property.serviceAreaId
+                            ? c.serviceAreas.some((sa) => sa.serviceAreaId === job.property.serviceAreaId)
+                            : false;
+                          return (
+                            <option key={c.id} value={c.id}>
+                              {isLocal ? `📍 ${c.name} — local` : c.name}
+                            </option>
+                          );
+                        })}
+                      </Select>
+                    </FormField>
+                    <FormField label="Role" htmlFor="role" hint="e.g. Lead, Helper">
+                      <Input id="role" name="role" />
+                    </FormField>
+                    <Button type="submit" size="sm">Assign</Button>
+                  </form>
+                </details>
+              )}
             </CardBody>
           </Card>
         </div>

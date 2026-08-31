@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { leadStatusLabels, tradeColors, tradeLabels } from "@/lib/labels";
+import { formatLeadSource, leadStatusLabels, tradeColors, tradeLabels } from "@/lib/labels";
+import { areaColor } from "@/lib/serviceArea";
 import { LeadStatusSelect } from "@/components/leads/LeadStatusSelect";
 import { format } from "date-fns";
 import type { LeadStatus } from "@prisma/client";
@@ -13,13 +14,13 @@ import type { LeadStatus } from "@prisma/client";
 const pipeline: LeadStatus[] = ["NEW", "CONTACTED", "QUOTED", "WON", "LOST"];
 
 export default async function LeadsPage() {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
 
   const leads = await prisma.lead.findMany({
     where: { companyId: company.id },
     orderBy: { createdAt: "desc" },
-    include: { client: true, property: true },
+    include: { client: true, property: true, serviceArea: true },
   });
 
   return (
@@ -57,6 +58,7 @@ export default async function LeadsPage() {
                 <tr>
                   <th className="px-5 py-2 font-medium">Contact</th>
                   <th className="px-5 py-2 font-medium">Trade</th>
+                  <th className="px-5 py-2 font-medium">Area</th>
                   <th className="px-5 py-2 font-medium">Received</th>
                   <th className="px-5 py-2 font-medium">Status</th>
                   <th className="px-5 py-2 font-medium"></th>
@@ -69,10 +71,18 @@ export default async function LeadsPage() {
                       <p className="font-medium text-[#16233A]">{l.contactName}</p>
                       <p className="text-xs text-[#5B6B82]">
                         {l.client ? l.client.name : l.contactEmail || l.contactPhone || "New prospect"}
+                        {formatLeadSource(l.source) && ` · ${formatLeadSource(l.source)}`}
                       </p>
                     </td>
                     <td className="px-5 py-3">
                       <Badge className={tradeColors[l.trade]}>{tradeLabels[l.trade]}</Badge>
+                    </td>
+                    <td className="px-5 py-3">
+                      {l.serviceArea ? (
+                        <Badge className={areaColor(l.serviceArea.name)}>{l.serviceArea.name}</Badge>
+                      ) : (
+                        <span className="text-xs text-[#8A93A3]">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3 text-[#5B6B82]">{format(l.createdAt, "MMM d, yyyy")}</td>
                     <td className="px-5 py-3">

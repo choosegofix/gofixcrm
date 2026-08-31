@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { NewJobForm } from "@/components/jobs/NewJobForm";
 
 export default async function NewJobPage({
@@ -8,7 +8,7 @@ export default async function NewJobPage({
 }: {
   searchParams: Promise<{ clientId?: string }>;
 }) {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
   const { clientId } = await searchParams;
 

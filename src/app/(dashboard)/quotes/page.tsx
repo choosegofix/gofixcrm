@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 
 export default async function QuotesPage() {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
 
   const quotes = await prisma.quote.findMany({

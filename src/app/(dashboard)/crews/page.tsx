@@ -1,20 +1,21 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin } from "@/lib/session";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { crewTypeLabels, tradeColors, tradeLabels } from "@/lib/labels";
+import { areaColor } from "@/lib/serviceArea";
 
 export default async function CrewsPage() {
-  await requireUser();
+  await requireOfficeOrAdmin();
   const company = await getCompany();
 
   const crews = await prisma.crew.findMany({
     where: { companyId: company.id, isActive: true },
     orderBy: { name: "asc" },
-    include: { members: { include: { user: true } } },
+    include: { members: { include: { user: true } }, serviceAreas: { include: { serviceArea: true } } },
   });
 
   return (
@@ -42,6 +43,11 @@ export default async function CrewsPage() {
                   {c.trades.map((t) => (
                     <Badge key={t} className={tradeColors[t]}>
                       {tradeLabels[t]}
+                    </Badge>
+                  ))}
+                  {c.serviceAreas.map((sa) => (
+                    <Badge key={sa.serviceAreaId} className={areaColor(sa.serviceArea.name)}>
+                      {sa.serviceArea.name}
                     </Badge>
                   ))}
                 </div>
