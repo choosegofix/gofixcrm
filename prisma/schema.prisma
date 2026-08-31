@@ -1,0 +1,865 @@
+// GoFix Services CRM — database schema
+// Prisma schema targeting PostgreSQL. See README.md for how migrations work.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  OFFICE
+  FIELD
+  SUBCONTRACTOR
+}
+
+enum Trade {
+  HVAC
+  ELECTRICAL
+  PLUMBING
+}
+
+enum CommPreference {
+  EMAIL
+  SMS
+  PHONE
+  ANY
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  WON
+  LOST
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  VIEWED
+  APPROVED
+  DECLINED
+  EXPIRED
+}
+
+enum JobStatus {
+  REQUESTED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  INVOICED
+  PAID
+  CANCELLED
+}
+
+enum PricingResponsibility {
+  COMPANY_PRICED
+  SUBCONTRACTOR_PRICED
+}
+
+enum VisitStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  MISSED
+}
+
+enum RecurrenceFrequency {
+  NONE
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum PaymentMethod {
+  CARD
+  ACH
+  ETRANSFER
+  CASH
+  CHEQUE
+  OTHER
+}
+
+enum PaymentType {
+  DEPOSIT
+  INVOICE_PAYMENT
+  TIP
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
+enum PhotoStage {
+  BEFORE
+  DURING
+  AFTER
+  OTHER
+}
+
+enum TaskStatus {
+  OPEN
+  COMPLETED
+}
+
+enum CrewType {
+  INTERNAL
+  SUBCONTRACTOR
+}
+
+enum ShareLinkType {
+  JOB_PHOTO_FEED
+  GALLERY
+}
+
+enum DocumentCategory {
+  CONTRACT
+  PERMIT
+  INVOICE_PDF
+  OTHER
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COMPANY & AUTH
+// ─────────────────────────────────────────────────────────────────────────
+
+model Company {
+  id                String   @id @default(cuid())
+  name              String
+  address           String?
+  city              String?
+  province          String   @default("ON")
+  postalCode        String?
+  phone             String?
+  email             String?
+  website           String?
+  logoUrl           String?
+  currency          String   @default("CAD")
+  timezone          String   @default("America/Toronto")
+  driveRootFolderId String? // root Shared Drive folder for this company
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  users     User[]
+  clients   Client[]
+  crews     Crew[]
+  leads     Lead[]
+  quotes    Quote[]
+  jobs      Job[]
+  invoices  Invoice[]
+  photos    Photo[]
+  documents Document[]
+  tags      Tag[]
+  galleries Gallery[]
+  tasks     Task[]
+  comments  Comment[]
+  auditLogs AuditLog[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id])
+  name         String
+  email        String   @unique
+  passwordHash String? // null if Google-only sign-in
+  image        String?
+  role         Role
+  phone        String?
+  hourlyRate   Decimal? @db.Decimal(10, 2)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  crewMemberships   CrewMember[]
+  jobAssignments    JobAssignment[]
+  uploadedPhotos    Photo[]           @relation("PhotoUploadedBy")
+  uploadedDocuments Document[]
+  timeEntries       TimeEntry[]
+  tasksAssigned     Task[]            @relation("TaskAssignee")
+  tasksCompleted    Task[]            @relation("TaskCompletedBy")
+  tasksCreated      Task[]            @relation("TaskCreatedBy")
+  comments          Comment[]
+  commentMentions   CommentMention[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  annotations       PhotoAnnotation[]
+  createdQuotes     Quote[]           @relation("QuoteCreatedBy")
+  createdJobs       Job[]             @relation("JobCreatedBy")
+  createdInvoices   Invoice[]         @relation("InvoiceCreatedBy")
+  createdGalleries  Gallery[]
+  createdShareLinks ShareLink[]
+}
+
+// Standard Auth.js (NextAuth) tables for staff login (email/password + Google)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CLIENTS & PROPERTIES
+// ─────────────────────────────────────────────────────────────────────────
+
+model Client {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  name       String
+  notes      String?  @db.Text
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  contacts         Contact[]
+  properties       Property[]
+  leads            Lead[]
+  quotes           Quote[]
+  jobs             Job[]
+  invoices         Invoice[]
+  payments         Payment[]
+  documents        Document[]
+  galleries        Gallery[]
+  portalMagicLinks PortalMagicLink[]
+}
+
+model Contact {
+  id             String         @id @default(cuid())
+  clientId       String
+  client         Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  firstName      String
+  lastName       String
+  title          String? // e.g. "Property Manager", "Tenant", "AP Contact"
+  email          String?
+  phone          String?
+  commPreference CommPreference @default(EMAIL)
+  isPrimary      Boolean        @default(false)
+  isBilling      Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  portalMagicLinks PortalMagicLink[]
+}
+
+model Property {
+  id           String   @id @default(cuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  label        String? // e.g. "Main Office", "Building A"
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  province     String   @default("ON")
+  postalCode   String?
+  country      String   @default("CA")
+  lat          Float?
+  lng          Float?
+  accessNotes  String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  leads  Lead[]
+  quotes Quote[]
+  jobs   Job[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// LEADS & QUOTES
+// ─────────────────────────────────────────────────────────────────────────
+
+model Lead {
+  id           String     @id @default(cuid())
+  companyId    String
+  company      Company    @relation(fields: [companyId], references: [id])
+  clientId     String?
+  client       Client?    @relation(fields: [clientId], references: [id])
+  propertyId   String?
+  property     Property?  @relation(fields: [propertyId], references: [id])
+  contactName  String
+  contactEmail String?
+  contactPhone String?
+  source       String? // website form, phone, referral, etc.
+  trade        Trade
+  description  String     @db.Text
+  status       LeadStatus @default(NEW)
+  assignedToId String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  quotes Quote[]
+}
+
+model Quote {
+  id                 String      @id @default(cuid())
+  companyId          String
+  company            Company     @relation(fields: [companyId], references: [id])
+  clientId           String
+  client             Client      @relation(fields: [clientId], references: [id])
+  propertyId         String
+  property           Property    @relation(fields: [propertyId], references: [id])
+  leadId             String?
+  lead               Lead?       @relation(fields: [leadId], references: [id])
+  quoteNumber        String      @unique
+  title              String
+  trade              Trade
+  status             QuoteStatus @default(DRAFT)
+  validUntil         DateTime?
+  subtotal           Decimal     @db.Decimal(10, 2)
+  taxAmount          Decimal     @db.Decimal(10, 2)
+  discountAmount     Decimal     @default(0) @db.Decimal(10, 2)
+  total              Decimal     @db.Decimal(10, 2)
+  depositRequired    Decimal?    @db.Decimal(10, 2)
+  notes              String?     @db.Text
+  termsAndConditions String?     @db.Text
+  sentAt             DateTime?
+  viewedAt           DateTime?
+  approvedAt         DateTime?
+  declinedAt         DateTime?
+  createdByUserId    String
+  createdByUser      User        @relation("QuoteCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  options   QuoteOption[]
+  lineItems QuoteLineItem[]
+  photos    Photo[]
+  job       Job?
+}
+
+model QuoteOption {
+  id          String  @id @default(cuid())
+  quoteId     String
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  name        String // e.g. "Good", "Better", "Best"
+  description String?
+  isSelected  Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  lineItems QuoteLineItem[]
+}
+
+model QuoteLineItem {
+  id            String       @id @default(cuid())
+  quoteId       String
+  quote         Quote        @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteOptionId String?
+  quoteOption   QuoteOption? @relation(fields: [quoteOptionId], references: [id])
+  description   String
+  quantity      Decimal      @default(1) @db.Decimal(10, 2)
+  unitPrice     Decimal      @db.Decimal(10, 2)
+  markupPercent Decimal?     @db.Decimal(5, 2)
+  isOptional    Boolean      @default(false)
+  sortOrder     Int          @default(0)
+  total         Decimal      @db.Decimal(10, 2)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// JOBS, VISITS, CREWS
+// ─────────────────────────────────────────────────────────────────────────
+
+model Job {
+  id                    String                @id @default(cuid())
+  companyId             String
+  company               Company               @relation(fields: [companyId], references: [id])
+  clientId              String
+  client                Client                @relation(fields: [clientId], references: [id])
+  propertyId            String
+  property              Property              @relation(fields: [propertyId], references: [id])
+  quoteId               String?               @unique
+  quote                 Quote?                @relation(fields: [quoteId], references: [id])
+  jobNumber             String                @unique
+  title                 String
+  description           String?               @db.Text
+  trade                 Trade
+  status                JobStatus             @default(REQUESTED)
+  pricingResponsibility PricingResponsibility @default(COMPANY_PRICED)
+  quotedTotal           Decimal?              @db.Decimal(10, 2)
+  scheduledStart        DateTime?
+  scheduledEnd          DateTime?
+  completedAt           DateTime?
+  invoicedAt            DateTime?
+  paidAt                DateTime?
+  driveFolderId         String? // per-job Drive subfolder
+  createdByUserId       String
+  createdByUser         User                  @relation("JobCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  visits             Visit[]
+  assignments        JobAssignment[]
+  photos             Photo[]
+  documents          Document[]
+  tasks              Task[]
+  comments           Comment[]
+  invoices           Invoice[]
+  materialCosts      MaterialCost[]
+  subcontractorCosts SubcontractorCost[]
+  tags               TagOnJob[]
+  recurrenceRule     RecurrenceRule?
+  galleries          Gallery[]
+  shareLinks         ShareLink[]
+}
+
+model JobAssignment {
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  crewId     String?
+  crew       Crew?    @relation(fields: [crewId], references: [id])
+  role       String? // e.g. "LEAD", "HELPER"
+  assignedAt DateTime @default(now())
+}
+
+model RecurrenceRule {
+  id          String              @id @default(cuid())
+  jobId       String              @unique
+  job         Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  frequency   RecurrenceFrequency
+  interval    Int                 @default(1)
+  daysOfWeek  Int[]               @default([])
+  endDate     DateTime?
+  occurrences Int?
+  createdAt   DateTime            @default(now())
+}
+
+model Visit {
+  id             String      @id @default(cuid())
+  jobId          String
+  job            Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  visitNumber    Int
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  actualStart    DateTime?
+  actualEnd      DateTime?
+  status         VisitStatus @default(SCHEDULED)
+  notes          String?     @db.Text
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  timeEntries TimeEntry[]
+  photos      Photo[]
+  tasks       Task[]
+}
+
+model TimeEntry {
+  id         String    @id @default(cuid())
+  visitId    String
+  visit      Visit     @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  clockInAt  DateTime
+  clockOutAt DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+}
+
+model Crew {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id])
+  name         String
+  type         CrewType
+  trades       Trade[]
+  contactEmail String?
+  contactPhone String?
+  hourlyRate   Decimal? @db.Decimal(10, 2)
+  notes        String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members            CrewMember[]
+  jobAssignments     JobAssignment[]
+  subcontractorCosts SubcontractorCost[]
+}
+
+model CrewMember {
+  id       String   @id @default(cuid())
+  crewId   String
+  crew     Crew     @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  joinedAt DateTime @default(now())
+
+  @@unique([crewId, userId])
+}
+
+model MaterialCost {
+  id            String   @id @default(cuid())
+  jobId         String
+  job           Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  description   String
+  quantity      Decimal  @default(1) @db.Decimal(10, 2)
+  unitCost      Decimal  @db.Decimal(10, 2)
+  total         Decimal  @db.Decimal(10, 2)
+  addedByUserId String
+  createdAt     DateTime @default(now())
+}
+
+model SubcontractorCost {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  crewId      String
+  crew        Crew     @relation(fields: [crewId], references: [id])
+  description String
+  amount      Decimal  @db.Decimal(10, 2)
+  invoiceRef  String?
+  createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// INVOICING & PAYMENTS
+// ─────────────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id              String        @id @default(cuid())
+  companyId       String
+  company         Company       @relation(fields: [companyId], references: [id])
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id])
+  jobId           String?
+  job             Job?          @relation(fields: [jobId], references: [id])
+  invoiceNumber   String        @unique
+  status          InvoiceStatus @default(DRAFT)
+  issueDate       DateTime
+  dueDate         DateTime
+  subtotal        Decimal       @db.Decimal(10, 2)
+  taxAmount       Decimal       @db.Decimal(10, 2)
+  discountAmount  Decimal       @default(0) @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
+  amountPaid      Decimal       @default(0) @db.Decimal(10, 2)
+  stripeInvoiceId String?
+  notes           String?       @db.Text
+  createdByUserId String
+  createdByUser   User          @relation("InvoiceCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+}
+
+model InvoiceLineItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(10, 2)
+  sortOrder   Int     @default(0)
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  invoiceId             String?
+  invoice               Invoice?      @relation(fields: [invoiceId], references: [id])
+  clientId              String
+  client                Client        @relation(fields: [clientId], references: [id])
+  type                  PaymentType
+  method                PaymentMethod
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @default("CAD")
+  stripePaymentIntentId String?
+  status                String        @default("succeeded")
+  paidAt                DateTime      @default(now())
+  notes                 String?
+  createdAt             DateTime      @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PHOTOS, DOCUMENTS, TAGS, GALLERIES
+// ─────────────────────────────────────────────────────────────────────────
+
+model Photo {
+  id               String      @id @default(cuid())
+  companyId        String
+  company          Company     @relation(fields: [companyId], references: [id])
+  jobId            String
+  job              Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  visitId          String?
+  visit            Visit?      @relation(fields: [visitId], references: [id])
+  quoteId          String?
+  quote            Quote?      @relation(fields: [quoteId], references: [id])
+  mediaType        MediaType   @default(PHOTO)
+  driveFileId      String // binary lives in Google Drive; this links to it
+  fileName         String
+  mimeType         String
+  sizeBytes        Int
+  gpsLat           Float?
+  gpsLng           Float?
+  takenAt          DateTime? // from EXIF
+  stage            PhotoStage?
+  caption          String?
+  isWatermarked    Boolean     @default(false)
+  uploadedByUserId String
+  uploadedByUser   User        @relation("PhotoUploadedBy", fields: [uploadedByUserId], references: [id])
+  createdAt        DateTime    @default(now())
+
+  annotations PhotoAnnotation[]
+  tags        TagOnPhoto[]
+  comments    Comment[]
+  tasks       Task[]
+  galleries   GalleryPhoto[]
+}
+
+model PhotoAnnotation {
+  id              String   @id @default(cuid())
+  photoId         String
+  photo           Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  createdByUserId String
+  createdByUser   User     @relation(fields: [createdByUserId], references: [id])
+  data            Json // overlay shapes/text, rendered client-side over the original
+  createdAt       DateTime @default(now())
+}
+
+model Document {
+  id               String           @id @default(cuid())
+  companyId        String
+  company          Company          @relation(fields: [companyId], references: [id])
+  clientId         String?
+  client           Client?          @relation(fields: [clientId], references: [id])
+  jobId            String?
+  job              Job?             @relation(fields: [jobId], references: [id])
+  driveFileId      String
+  fileName         String
+  mimeType         String
+  sizeBytes        Int
+  category         DocumentCategory @default(OTHER)
+  uploadedByUserId String
+  uploadedByUser   User             @relation(fields: [uploadedByUserId], references: [id])
+  createdAt        DateTime         @default(now())
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String
+  color     String   @default("#6b7280")
+  createdAt DateTime @default(now())
+
+  jobs   TagOnJob[]
+  photos TagOnPhoto[]
+
+  @@unique([companyId, name])
+}
+
+model TagOnJob {
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@id([tagId, jobId])
+}
+
+model TagOnPhoto {
+  tagId   String
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  photoId String
+  photo   Photo  @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@id([tagId, photoId])
+}
+
+model Gallery {
+  id              String   @id @default(cuid())
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id])
+  clientId        String?
+  client          Client?  @relation(fields: [clientId], references: [id])
+  jobId           String?
+  job             Job?     @relation(fields: [jobId], references: [id])
+  title           String
+  description     String?
+  createdByUserId String
+  createdByUser   User     @relation(fields: [createdByUserId], references: [id])
+  createdAt       DateTime @default(now())
+
+  photos     GalleryPhoto[]
+  shareLinks ShareLink[]
+}
+
+model GalleryPhoto {
+  galleryId String
+  gallery   Gallery @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  photoId   String
+  photo     Photo   @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  sortOrder Int     @default(0)
+
+  @@id([galleryId, photoId])
+}
+
+// App-generated scoped, expiring links (not Drive's native sharing)
+model ShareLink {
+  id              String        @id @default(cuid())
+  token           String        @unique
+  type            ShareLinkType
+  jobId           String?
+  job             Job?          @relation(fields: [jobId], references: [id])
+  galleryId       String?
+  gallery         Gallery?      @relation(fields: [galleryId], references: [id])
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  lastAccessedAt  DateTime?
+  createdByUserId String
+  createdByUser   User          @relation(fields: [createdByUserId], references: [id])
+  createdAt       DateTime      @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TASKS & COMMENTS
+// ─────────────────────────────────────────────────────────────────────────
+
+model Task {
+  id                String     @id @default(cuid())
+  companyId         String
+  company           Company    @relation(fields: [companyId], references: [id])
+  jobId             String?
+  job               Job?       @relation(fields: [jobId], references: [id])
+  visitId           String?
+  visit             Visit?     @relation(fields: [visitId], references: [id])
+  photoId           String?
+  photo             Photo?     @relation(fields: [photoId], references: [id])
+  title             String
+  description       String?
+  status            TaskStatus @default(OPEN)
+  assignedToId      String?
+  assignedTo        User?      @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  dueDate           DateTime?
+  completedAt       DateTime?
+  completedByUserId String?
+  completedByUser   User?      @relation("TaskCompletedBy", fields: [completedByUserId], references: [id])
+  createdByUserId   String
+  createdByUser     User       @relation("TaskCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  jobId     String?
+  job       Job?     @relation(fields: [jobId], references: [id])
+  photoId   String?
+  photo     Photo?   @relation(fields: [photoId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mentions CommentMention[]
+}
+
+model CommentMention {
+  id        String  @id @default(cuid())
+  commentId String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CLIENT PORTAL AUTH (separate from staff Auth.js login)
+// ─────────────────────────────────────────────────────────────────────────
+
+model PortalMagicLink {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  clientId  String
+  client    Client    @relation(fields: [clientId], references: [id])
+  contactId String
+  contact   Contact   @relation(fields: [contactId], references: [id])
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// AUDIT & NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  companyId         String
+  company           Company  @relation(fields: [companyId], references: [id])
+  entityType        String // "Job", "Quote", "Payment", etc.
+  entityId          String
+  action            String // "status_changed", "approved", "payment_received", etc.
+  performedByUserId String?
+  performedByUser   User?    @relation(fields: [performedByUserId], references: [id])
+  metadata          Json?
+  createdAt         DateTime @default(now())
+}
+
+model Notification {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  type              String
+  title             String
+  body              String?
+  channel           String   @default("IN_APP") // IN_APP, EMAIL, SMS
+  isRead            Boolean  @default(false)
+  relatedEntityType String?
+  relatedEntityId   String?
+  createdAt         DateTime @default(now())
+}
