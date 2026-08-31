@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function ClientsPage() {
   await requireUser();
@@ -22,8 +24,8 @@ export default async function ClientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Clients</h1>
-          <p className="text-sm text-gray-500">{clients.length} active clients</p>
+          <h1 className="text-xl font-semibold text-[#16233A]">Clients</h1>
+          <p className="text-sm text-[#5B6B82]">{clients.length} active clients</p>
         </div>
         <LinkButton href="/clients/new">+ New client</LinkButton>
       </div>
@@ -32,28 +34,32 @@ export default async function ClientsPage() {
         <CardHeader title="All clients" />
         <CardBody className="p-0">
           {clients.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500">
-              No clients yet. Add your first one to get started.
-            </p>
+            <EmptyState
+              icon={Users}
+              title="No clients yet"
+              description="Add your first client to start creating quotes and jobs for them."
+              actionHref="/clients/new"
+              actionLabel="+ New client"
+            />
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
+              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                 <tr>
                   <th className="px-5 py-2 font-medium">Name</th>
                   <th className="px-5 py-2 font-medium">Properties</th>
                   <th className="px-5 py-2 font-medium">Jobs</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#EFEAE0]">
                 {clients.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
+                  <tr key={c.id} className="hover:bg-[#FAF7F1]">
                     <td className="px-5 py-3">
-                      <Link href={`/clients/${c.id}`} className="font-medium text-gray-900 hover:text-blue-600">
+                      <Link href={`/clients/${c.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
                         {c.name}
                       </Link>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{c.properties.length}</td>
-                    <td className="px-5 py-3 text-gray-600">{c._count.jobs}</td>
+                    <td className="px-5 py-3 text-[#5B6B82]">{c.properties.length}</td>
+                    <td className="px-5 py-3 text-[#5B6B82]">{c._count.jobs}</td>
                   </tr>
                 ))}
               </tbody>

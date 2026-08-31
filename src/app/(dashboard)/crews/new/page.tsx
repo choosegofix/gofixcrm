@@ -9,7 +9,7 @@ export default async function NewCrewPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">New crew</h1>
+      <h1 className="text-xl font-semibold text-[#16233A]">New crew</h1>
       <form action={createCrew}>
         <Card>
           <CardHeader title="Crew" />
@@ -24,7 +24,7 @@ export default async function NewCrewPage() {
               </Select>
             </FormField>
             <FormField label="Trades" htmlFor="trades">
-              <div className="flex gap-4 text-sm text-gray-700">
+              <div className="flex gap-4 text-sm text-[#3A4A5F]">
                 <label className="flex items-center gap-1.5">
                   <input type="checkbox" name="trades" value="HVAC" /> HVAC
                 </label>

@@ -24,10 +24,10 @@ export function NewJobForm({
     return (
       <Card>
         <CardBody>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[#5B6B82]">
             You&apos;ll need a client (and at least one property) before you can create a job.
           </p>
-          <Link href="/clients/new" className="mt-2 inline-block text-sm font-medium text-blue-600 hover:underline">
+          <Link href="/clients/new" className="mt-2 inline-block text-sm font-medium text-[#D9480F] hover:underline">
             Add a client first →
           </Link>
         </CardBody>

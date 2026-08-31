@@ -13,7 +13,7 @@ export function JobStatusSelect({ jobId, status }: { jobId: string; status: JobS
       defaultValue={status}
       disabled={pending}
       onChange={(e) => startTransition(() => updateJobStatus(jobId, e.target.value as JobStatus))}
-      className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-60"
+      className="rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm font-medium text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F] disabled:opacity-60"
     >
       {Object.entries(jobStatusLabels).map(([value, label]) => (
         <option key={value} value={value}>
@@ -41,7 +41,7 @@ export function VisitStatusSelect({
       onChange={(e) =>
         startTransition(() => updateVisitStatus(jobId, visitId, e.target.value as VisitStatus))
       }
-      className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-60"
+      className="rounded-md border border-[#DDD6C7] px-2 py-1 text-xs font-medium text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F] disabled:opacity-60"
     >
       {Object.entries(visitStatusLabels).map(([value, label]) => (
         <option key={value} value={value}>
@@ -59,7 +59,7 @@ export function RemoveAssignmentButton({ jobId, assignmentId }: { jobId: string;
       type="button"
       disabled={pending}
       onClick={() => startTransition(() => removeAssignment(jobId, assignmentId))}
-      className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-60"
+      className="text-xs text-[#8A93A3] hover:text-red-600 disabled:opacity-60"
     >
       Remove
     </button>

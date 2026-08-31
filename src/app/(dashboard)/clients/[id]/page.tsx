@@ -35,8 +35,8 @@ export default async function ClientDetailPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{client.name}</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-xl font-semibold text-[#16233A]">{client.name}</h1>
+          <p className="text-sm text-[#5B6B82]">
             {client.properties.length} propert{client.properties.length === 1 ? "y" : "ies"} ·{" "}
             {client.jobs.length} job{client.jobs.length === 1 ? "" : "s"}
           </p>
@@ -55,16 +55,16 @@ export default async function ClientDetailPage({
             <CardHeader title="Jobs" />
             <CardBody className="p-0">
               {client.jobs.length === 0 ? (
-                <p className="px-5 py-6 text-sm text-gray-500">No jobs for this client yet.</p>
+                <p className="px-5 py-6 text-sm text-[#5B6B82]">No jobs for this client yet.</p>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul className="divide-y divide-[#EFEAE0]">
                   {client.jobs.map((j) => (
                     <li key={j.id} className="flex items-center justify-between px-5 py-3">
                       <div>
-                        <Link href={`/jobs/${j.id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600">
+                        <Link href={`/jobs/${j.id}`} className="text-sm font-medium text-[#16233A] hover:text-[#D9480F]">
                           {j.jobNumber} · {j.title}
                         </Link>
-                        <p className="text-xs text-gray-500">{j.property.addressLine1}</p>
+                        <p className="text-xs text-[#5B6B82]">{j.property.addressLine1}</p>
                       </div>
                       <Badge className={jobStatusColors[j.status]}>{jobStatusLabels[j.status]}</Badge>
                     </li>
@@ -78,11 +78,11 @@ export default async function ClientDetailPage({
             <CardHeader title="Properties" />
             <CardBody className="space-y-4">
               {client.properties.length > 0 && (
-                <ul className="divide-y divide-gray-100 rounded-md border border-gray-100">
+                <ul className="divide-y divide-[#EFEAE0] rounded-md border border-[#EFEAE0]">
                   {client.properties.map((p) => (
                     <li key={p.id} className="px-4 py-3 text-sm">
-                      <p className="font-medium text-gray-900">{p.label || p.addressLine1}</p>
-                      <p className="text-gray-500">
+                      <p className="font-medium text-[#16233A]">{p.label || p.addressLine1}</p>
+                      <p className="text-[#5B6B82]">
                         {p.addressLine1}
                         {p.addressLine2 ? `, ${p.addressLine2}` : ""}, {p.city}
                         {p.postalCode ? ` ${p.postalCode}` : ""}
@@ -92,7 +92,7 @@ export default async function ClientDetailPage({
                 </ul>
               )}
               <details className="text-sm">
-                <summary className="cursor-pointer font-medium text-blue-600">+ Add a property</summary>
+                <summary className="cursor-pointer font-medium text-[#D9480F]">+ Add a property</summary>
                 <form action={addPropertyWithClient} className="mt-3 grid grid-cols-2 gap-3">
                   <FormField label="Label" htmlFor="label">
                     <Input id="label" name="label" placeholder="e.g. Building A" />
@@ -127,21 +127,21 @@ export default async function ClientDetailPage({
               {client.contacts.length > 0 && (
                 <ul className="space-y-3">
                   {client.contacts.map((c) => (
-                    <li key={c.id} className="rounded-md border border-gray-100 p-3 text-sm">
-                      <p className="font-medium text-gray-900">
+                    <li key={c.id} className="rounded-md border border-[#EFEAE0] p-3 text-sm">
+                      <p className="font-medium text-[#16233A]">
                         {c.firstName} {c.lastName}
-                        {c.isPrimary && <span className="ml-2 text-xs font-normal text-blue-600">Primary</span>}
+                        {c.isPrimary && <span className="ml-2 text-xs font-normal text-[#D9480F]">Primary</span>}
                       </p>
-                      {c.title && <p className="text-xs text-gray-500">{c.title}</p>}
-                      {c.email && <p className="text-gray-600">{c.email}</p>}
-                      {c.phone && <p className="text-gray-600">{c.phone}</p>}
-                      <p className="mt-1 text-xs text-gray-400">Prefers {c.commPreference.toLowerCase()}</p>
+                      {c.title && <p className="text-xs text-[#5B6B82]">{c.title}</p>}
+                      {c.email && <p className="text-[#5B6B82]">{c.email}</p>}
+                      {c.phone && <p className="text-[#5B6B82]">{c.phone}</p>}
+                      <p className="mt-1 text-xs text-[#8A93A3]">Prefers {c.commPreference.toLowerCase()}</p>
                     </li>
                   ))}
                 </ul>
               )}
               <details className="text-sm">
-                <summary className="cursor-pointer font-medium text-blue-600">+ Add a contact</summary>
+                <summary className="cursor-pointer font-medium text-[#D9480F]">+ Add a contact</summary>
                 <form action={addContactWithClient} className="mt-3 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <FormField label="First name" htmlFor="firstName" required>
@@ -170,7 +170,7 @@ export default async function ClientDetailPage({
                       <option value="ANY">Any</option>
                     </Select>
                   </FormField>
-                  <div className="flex gap-4 text-sm text-gray-600">
+                  <div className="flex gap-4 text-sm text-[#5B6B82]">
                     <label className="flex items-center gap-1.5">
                       <input type="checkbox" name="isPrimary" /> Primary contact
                     </label>
@@ -187,7 +187,7 @@ export default async function ClientDetailPage({
           <Card>
             <CardHeader title="Notes" />
             <CardBody>
-              <Textarea defaultValue={client.notes ?? ""} rows={4} readOnly className="bg-gray-50" />
+              <Textarea defaultValue={client.notes ?? ""} rows={4} readOnly className="bg-[#FAF7F1]" />
             </CardBody>
           </Card>
         </div>

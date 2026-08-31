@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { quoteStatusLabels, tradeColors, tradeLabels } from "@/lib/labels";
+import { quoteStatusColors, quoteStatusLabels, tradeColors, tradeLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
 import { QuoteActions } from "@/components/quotes/QuoteActions";
 import { DepositForm } from "@/components/quotes/DepositForm";
+import { TicketHeader } from "@/components/ui/TicketHeader";
 import { format } from "date-fns";
 
 export default async function QuoteDetailPage({
@@ -40,26 +41,29 @@ export default async function QuoteDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-gray-500">{quote.quoteNumber}</p>
-          <h1 className="text-xl font-semibold text-gray-900">{quote.title}</h1>
-          <p className="text-sm text-gray-500">
-            {quote.client.name} — {quote.property.addressLine1}
-          </p>
-        </div>
-        <Badge className="border-gray-200 bg-gray-100 text-gray-700">
-          {quoteStatusLabels[quote.status]}
-        </Badge>
-      </div>
+      <TicketHeader
+        kind="Quote"
+        number={quote.quoteNumber}
+        title={quote.title}
+        meta={`${quote.client.name} — ${quote.property.addressLine1}`}
+        status={
+          <Badge className={quoteStatusColors[quote.status]}>{quoteStatusLabels[quote.status]}</Badge>
+        }
+        action={
+          <div className="flex flex-wrap justify-end gap-1.5">
+            <Badge className={tradeColors[quote.trade]}>{tradeLabels[quote.trade]}</Badge>
+          </div>
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge className={tradeColors[quote.trade]}>{tradeLabels[quote.trade]}</Badge>
+      <div className="flex flex-wrap items-center gap-3">
         {quote.validUntil && (
-          <span className="text-xs text-gray-500">Valid until {format(quote.validUntil, "MMM d, yyyy")}</span>
+          <span className="text-xs text-[#5B6B82]">
+            Valid until {format(quote.validUntil, "MMM d, yyyy")}
+          </span>
         )}
         {quote.job && (
-          <Link href={`/jobs/${quote.job.id}`} className="text-xs font-medium text-blue-600 hover:underline">
+          <Link href={`/jobs/${quote.job.id}`} className="text-xs font-medium text-[#D9480F] hover:underline">
             View job {quote.job.jobNumber} →
           </Link>
         )}
@@ -71,7 +75,7 @@ export default async function QuoteDetailPage({
         <CardHeader title="Line items" />
         <CardBody className="p-0">
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
+            <thead className="border-b border-[#E3DDD0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
               <tr>
                 <th className="px-5 py-2 font-medium">Description</th>
                 <th className="px-5 py-2 font-medium">Qty</th>
@@ -79,40 +83,46 @@ export default async function QuoteDetailPage({
                 <th className="px-5 py-2 font-medium">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#EFEAE0]">
               {quote.lineItems.map((li) => (
                 <tr key={li.id}>
-                  <td className="px-5 py-3 text-gray-900">
+                  <td className="px-5 py-3 text-[#16233A]">
                     {li.description}
                     {li.isOptional && (
-                      <span className="ml-2 text-xs font-medium text-amber-600">Optional</span>
+                      <span className="ml-2 text-xs font-medium text-[#8A5A19]">Optional</span>
                     )}
                   </td>
-                  <td className="px-5 py-3 text-gray-600">{Number(li.quantity)}</td>
-                  <td className="px-5 py-3 text-gray-600">{formatCurrency(li.unitPrice)}</td>
-                  <td className="px-5 py-3 text-gray-900">{formatCurrency(li.total)}</td>
+                  <td className="tabular-nums px-5 py-3 font-mono text-[#5B6B82]">
+                    {Number(li.quantity)}
+                  </td>
+                  <td className="tabular-nums px-5 py-3 font-mono text-[#5B6B82]">
+                    {formatCurrency(li.unitPrice)}
+                  </td>
+                  <td className="tabular-nums px-5 py-3 font-mono text-[#16233A]">
+                    {formatCurrency(li.total)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <div className="border-t border-gray-100 px-5 py-4">
+          <div className="border-t border-[#E3DDD0] px-5 py-4">
             <div className="ml-auto max-w-xs space-y-1 text-sm">
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-[#5B6B82]">
                 <span>Subtotal</span>
-                <span>{formatCurrency(quote.subtotal)}</span>
+                <span className="tabular-nums font-mono">{formatCurrency(quote.subtotal)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-[#5B6B82]">
                 <span>HST (13%)</span>
-                <span>{formatCurrency(quote.taxAmount)}</span>
+                <span className="tabular-nums font-mono">{formatCurrency(quote.taxAmount)}</span>
               </div>
-              <div className="flex justify-between text-base font-semibold text-gray-900">
+              <div className="flex justify-between text-base font-semibold text-[#16233A]">
                 <span>Total</span>
-                <span>{formatCurrency(quote.total)}</span>
+                <span className="tabular-nums font-mono">{formatCurrency(quote.total)}</span>
               </div>
               {quote.depositRequired && (
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-[#5B6B82]">
                   <span>Deposit required</span>
-                  <span>{formatCurrency(quote.depositRequired)}</span>
+                  <span className="tabular-nums font-mono">{formatCurrency(quote.depositRequired)}</span>
                 </div>
               )}
             </div>
@@ -135,16 +145,16 @@ export default async function QuoteDetailPage({
       {(quote.notes || quote.termsAndConditions) && (
         <Card>
           <CardHeader title="Notes & terms" />
-          <CardBody className="space-y-3 text-sm text-gray-700">
+          <CardBody className="space-y-3 text-sm text-[#3A4A5F]">
             {quote.notes && (
               <div>
-                <p className="text-xs font-medium uppercase text-gray-400">Internal notes</p>
+                <p className="text-xs font-medium uppercase text-[#8A93A3]">Internal notes</p>
                 <p className="whitespace-pre-wrap">{quote.notes}</p>
               </div>
             )}
             {quote.termsAndConditions && (
               <div>
-                <p className="text-xs font-medium uppercase text-gray-400">Terms & conditions</p>
+                <p className="text-xs font-medium uppercase text-[#8A93A3]">Terms & conditions</p>
                 <p className="whitespace-pre-wrap">{quote.termsAndConditions}</p>
               </div>
             )}

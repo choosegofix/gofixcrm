@@ -24,7 +24,7 @@ export default async function NewInvoicePage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">New invoice</h1>
+      <h1 className="text-xl font-semibold text-[#16233A]">New invoice</h1>
       <form action={createInvoice} className="space-y-6">
         <Card>
           <CardHeader title="Invoice for" />

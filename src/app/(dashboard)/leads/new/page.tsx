@@ -19,7 +19,7 @@ export default async function NewLeadPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">New lead</h1>
+      <h1 className="text-xl font-semibold text-[#16233A]">New lead</h1>
       <form action={createLead} className="space-y-6">
         <Card>
           <CardHeader title="Who's asking" />

@@ -20,7 +20,7 @@ export default async function NewJobPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">New job</h1>
+      <h1 className="text-xl font-semibold text-[#16233A]">New job</h1>
       <NewJobForm clients={clients} initialClientId={clientId} />
     </div>
   );

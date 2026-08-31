@@ -26,8 +26,8 @@ export default async function LeadsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Leads</h1>
-          <p className="text-sm text-gray-500">Inbound work requests, before they&apos;re quoted</p>
+          <h1 className="text-xl font-semibold text-[#16233A]">Leads</h1>
+          <p className="text-sm text-[#5B6B82]">Inbound work requests, before they&apos;re quoted</p>
         </div>
         <LinkButton href="/leads/new">+ New lead</LinkButton>
       </div>
@@ -36,10 +36,10 @@ export default async function LeadsPage() {
         {pipeline.map((status) => (
           <Card key={status}>
             <CardBody>
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              <p className="text-xs font-medium uppercase tracking-wide text-[#5B6B82]">
                 {leadStatusLabels[status]}
               </p>
-              <p className="mt-1 text-xl font-semibold text-gray-900">
+              <p className="mt-1 text-xl font-semibold text-[#16233A]">
                 {leads.filter((l) => l.status === status).length}
               </p>
             </CardBody>
@@ -50,10 +50,10 @@ export default async function LeadsPage() {
       <Card>
         <CardBody className="p-0">
           {leads.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500">No leads yet.</p>
+            <p className="px-5 py-6 text-sm text-[#5B6B82]">No leads yet.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
+              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                 <tr>
                   <th className="px-5 py-2 font-medium">Contact</th>
                   <th className="px-5 py-2 font-medium">Trade</th>
@@ -62,19 +62,19 @@ export default async function LeadsPage() {
                   <th className="px-5 py-2 font-medium"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#EFEAE0]">
                 {leads.map((l) => (
                   <tr key={l.id}>
                     <td className="px-5 py-3">
-                      <p className="font-medium text-gray-900">{l.contactName}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="font-medium text-[#16233A]">{l.contactName}</p>
+                      <p className="text-xs text-[#5B6B82]">
                         {l.client ? l.client.name : l.contactEmail || l.contactPhone || "New prospect"}
                       </p>
                     </td>
                     <td className="px-5 py-3">
                       <Badge className={tradeColors[l.trade]}>{tradeLabels[l.trade]}</Badge>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{format(l.createdAt, "MMM d, yyyy")}</td>
+                    <td className="px-5 py-3 text-[#5B6B82]">{format(l.createdAt, "MMM d, yyyy")}</td>
                     <td className="px-5 py-3">
                       <LeadStatusSelect leadId={l.id} status={l.status} />
                     </td>
@@ -82,12 +82,12 @@ export default async function LeadsPage() {
                       {l.clientId && l.propertyId ? (
                         <Link
                           href={`/quotes/new?leadId=${l.id}&clientId=${l.clientId}&propertyId=${l.propertyId}`}
-                          className="text-xs font-medium text-blue-600 hover:underline"
+                          className="text-xs font-medium text-[#D9480F] hover:underline"
                         >
                           Create quote →
                         </Link>
                       ) : (
-                        <span className="text-xs text-gray-400">Add a client to quote</span>
+                        <span className="text-xs text-[#8A93A3]">Add a client to quote</span>
                       )}
                     </td>
                   </tr>

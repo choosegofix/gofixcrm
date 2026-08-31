@@ -19,6 +19,7 @@ import { JobStatusSelect, VisitStatusSelect, RemoveAssignmentButton } from "@/co
 import { LinkButton } from "@/components/ui/Button";
 import { invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
+import { TicketHeader } from "@/components/ui/TicketHeader";
 import Link from "next/link";
 import { format } from "date-fns";
 
@@ -58,28 +59,29 @@ export default async function JobDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-gray-500">{job.jobNumber}</p>
-          <h1 className="text-xl font-semibold text-gray-900">{job.title}</h1>
-          <p className="text-sm text-gray-500">
-            {job.client.name} — {job.property.addressLine1}
-          </p>
-        </div>
-        <JobStatusSelect jobId={job.id} status={job.status} />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Badge className={tradeColors[job.trade]}>{tradeLabels[job.trade]}</Badge>
-        <Badge className="border-gray-200 bg-gray-100 text-gray-700">
-          {pricingResponsibilityLabels[job.pricingResponsibility]}
-        </Badge>
-        {job.quote && (
-          <Link href={`/quotes/${job.quote.id}`} className="text-xs font-medium text-blue-600 hover:underline">
-            From quote {job.quote.quoteNumber} →
-          </Link>
-        )}
-      </div>
+      <TicketHeader
+        kind="Job ticket"
+        number={job.jobNumber}
+        title={job.title}
+        meta={`${job.client.name} — ${job.property.addressLine1}`}
+        status={<JobStatusSelect jobId={job.id} status={job.status} />}
+        action={
+          <div className="flex flex-wrap justify-end gap-1.5">
+            <Badge className={tradeColors[job.trade]}>{tradeLabels[job.trade]}</Badge>
+            <Badge className="border-[#DDD6C7] bg-[#EEEAE1] text-[#5B6B82]">
+              {pricingResponsibilityLabels[job.pricingResponsibility]}
+            </Badge>
+          </div>
+        }
+      />
+      {job.quote && (
+        <Link
+          href={`/quotes/${job.quote.id}`}
+          className="-mt-4 inline-block text-xs font-medium text-[#D9480F] hover:underline"
+        >
+          From quote {job.quote.quoteNumber} →
+        </Link>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -87,7 +89,7 @@ export default async function JobDetailPage({
             <Card>
               <CardHeader title="Description" />
               <CardBody>
-                <p className="whitespace-pre-wrap text-sm text-gray-700">{job.description}</p>
+                <p className="whitespace-pre-wrap text-sm text-[#3A4A5F]">{job.description}</p>
               </CardBody>
             </Card>
           )}
@@ -96,15 +98,15 @@ export default async function JobDetailPage({
             <CardHeader title="Visits" subtitle="Individual scheduled instances of this job" />
             <CardBody className="space-y-4">
               {job.visits.length > 0 && (
-                <ul className="divide-y divide-gray-100 rounded-md border border-gray-100">
+                <ul className="divide-y divide-[#EFEAE0] rounded-md border border-[#EFEAE0]">
                   {job.visits.map((v) => (
                     <li key={v.id} className="flex items-center justify-between px-4 py-3 text-sm">
                       <div>
-                        <p className="font-medium text-gray-900">Visit #{v.visitNumber}</p>
-                        <p className="text-gray-500">
+                        <p className="font-medium text-[#16233A]">Visit #{v.visitNumber}</p>
+                        <p className="text-[#5B6B82]">
                           {format(v.scheduledStart, "EEE, MMM d · h:mm a")} – {format(v.scheduledEnd, "h:mm a")}
                         </p>
-                        {v.notes && <p className="mt-1 text-xs text-gray-400">{v.notes}</p>}
+                        {v.notes && <p className="mt-1 text-xs text-[#8A93A3]">{v.notes}</p>}
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={visitStatusColors[v.status]}>{visitStatusLabels[v.status]}</Badge>
@@ -115,7 +117,7 @@ export default async function JobDetailPage({
                 </ul>
               )}
               <details className="text-sm">
-                <summary className="cursor-pointer font-medium text-blue-600">+ Schedule a visit</summary>
+                <summary className="cursor-pointer font-medium text-[#D9480F]">+ Schedule a visit</summary>
                 <form action={createVisitForJob} className="mt-3 grid grid-cols-2 gap-3">
                   <FormField label="Start" htmlFor="scheduledStart" required>
                     <Input id="scheduledStart" name="scheduledStart" type="datetime-local" required />
@@ -143,15 +145,15 @@ export default async function JobDetailPage({
             />
             <CardBody className="p-0">
               {job.invoices.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-gray-500">No invoices yet.</p>
+                <p className="px-5 py-4 text-sm text-[#5B6B82]">No invoices yet.</p>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul className="divide-y divide-[#EFEAE0]">
                   {job.invoices.map((inv) => (
                     <li key={inv.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                      <Link href={`/invoices/${inv.id}`} className="font-medium text-gray-900 hover:text-blue-600">
+                      <Link href={`/invoices/${inv.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
                         {inv.invoiceNumber}
                       </Link>
-                      <span className="text-gray-500">
+                      <span className="text-[#5B6B82]">
                         {formatCurrency(inv.total)} · {invoiceStatusLabels[inv.status]}
                       </span>
                     </li>
@@ -164,7 +166,7 @@ export default async function JobDetailPage({
           <Card>
             <CardHeader title="Photos & documentation" subtitle="Coming in the next build phase" />
             <CardBody>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#5B6B82]">
                 Job-site photo capture with GPS/timestamp tagging and the project timeline will live here.
               </p>
             </CardBody>
@@ -178,10 +180,10 @@ export default async function JobDetailPage({
               {job.assignments.length > 0 && (
                 <ul className="space-y-2">
                   {job.assignments.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between rounded-md border border-gray-100 px-3 py-2 text-sm">
+                    <li key={a.id} className="flex items-center justify-between rounded-md border border-[#EFEAE0] px-3 py-2 text-sm">
                       <div>
-                        <p className="font-medium text-gray-900">{a.user?.name ?? a.crew?.name}</p>
-                        {a.role && <p className="text-xs text-gray-500">{a.role}</p>}
+                        <p className="font-medium text-[#16233A]">{a.user?.name ?? a.crew?.name}</p>
+                        {a.role && <p className="text-xs text-[#5B6B82]">{a.role}</p>}
                       </div>
                       <RemoveAssignmentButton jobId={job.id} assignmentId={a.id} />
                     </li>
@@ -189,7 +191,7 @@ export default async function JobDetailPage({
                 </ul>
               )}
               <details className="text-sm">
-                <summary className="cursor-pointer font-medium text-blue-600">+ Assign crew or person</summary>
+                <summary className="cursor-pointer font-medium text-[#D9480F]">+ Assign crew or person</summary>
                 <form action={assignToThisJob} className="mt-3 space-y-3">
                   <FormField label="Team member" htmlFor="userId">
                     <Select id="userId" name="userId" defaultValue="">

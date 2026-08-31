@@ -1,7 +1,7 @@
 import { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 const fieldClass =
-  "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500";
+  "block w-full rounded-md border border-[#DDD6C7] px-3 py-2 text-sm text-[#16233A] placeholder:text-[#8A93A3] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F]";
 
 export function Label({
   children,
@@ -13,7 +13,7 @@ export function Label({
   required?: boolean;
 }) {
   return (
-    <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium text-gray-700">
+    <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium text-[#3A4A5F]">
       {children} {required && <span className="text-red-500">*</span>}
     </label>
   );
@@ -50,7 +50,7 @@ export function FormField({
         {label}
       </Label>
       {children}
-      {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-[#5B6B82]">{hint}</p>}
     </div>
   );
 }

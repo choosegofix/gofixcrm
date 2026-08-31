@@ -35,7 +35,7 @@ export default async function NewQuotePage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">New quote</h1>
+      <h1 className="text-xl font-semibold text-[#16233A]">New quote</h1>
       <form action={createQuote} className="space-y-6">
         {leadId && <input type="hidden" name="leadId" value={leadId} />}
 

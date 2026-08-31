@@ -21,8 +21,8 @@ export default async function CrewsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Crews</h1>
-          <p className="text-sm text-gray-500">Internal crews and subcontractors</p>
+          <h1 className="text-xl font-semibold text-[#16233A]">Crews</h1>
+          <p className="text-sm text-[#5B6B82]">Internal crews and subcontractors</p>
         </div>
         <LinkButton href="/crews/new">+ New crew</LinkButton>
       </div>
@@ -34,8 +34,8 @@ export default async function CrewsPage() {
               <CardBody>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{c.name}</p>
-                    <p className="text-xs text-gray-500">{crewTypeLabels[c.type]}</p>
+                    <p className="font-medium text-[#16233A]">{c.name}</p>
+                    <p className="text-xs text-[#5B6B82]">{crewTypeLabels[c.type]}</p>
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -45,7 +45,7 @@ export default async function CrewsPage() {
                     </Badge>
                   ))}
                 </div>
-                <p className="mt-3 text-xs text-gray-500">
+                <p className="mt-3 text-xs text-[#5B6B82]">
                   {c.members.length} member{c.members.length === 1 ? "" : "s"}
                 </p>
               </CardBody>
@@ -53,7 +53,7 @@ export default async function CrewsPage() {
           </Link>
         ))}
         {crews.length === 0 && (
-          <p className="text-sm text-gray-500">No crews yet.</p>
+          <p className="text-sm text-[#5B6B82]">No crews yet.</p>
         )}
       </div>
     </div>

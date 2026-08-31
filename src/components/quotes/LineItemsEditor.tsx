@@ -12,8 +12,8 @@ export function LineItemsEditor({ showOptional = true }: { showOptional?: boolea
     ? "grid grid-cols-[1fr_5rem_7rem_5rem_2rem] items-center gap-2"
     : "grid grid-cols-[1fr_5rem_7rem_2rem] items-center gap-2";
   const headerGridClass = showOptional
-    ? "grid grid-cols-[1fr_5rem_7rem_5rem_2rem] gap-2 text-xs font-medium text-gray-500"
-    : "grid grid-cols-[1fr_5rem_7rem_2rem] gap-2 text-xs font-medium text-gray-500";
+    ? "grid grid-cols-[1fr_5rem_7rem_5rem_2rem] gap-2 text-xs font-medium text-[#5B6B82]"
+    : "grid grid-cols-[1fr_5rem_7rem_2rem] gap-2 text-xs font-medium text-[#5B6B82]";
 
   return (
     <div className="space-y-3">
@@ -37,7 +37,7 @@ export function LineItemsEditor({ showOptional = true }: { showOptional?: boolea
             type="button"
             onClick={() => setRows((r) => r.filter((x) => x.key !== row.key))}
             disabled={rows.length === 1}
-            className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-30"
+            className="text-xs text-[#8A93A3] hover:text-red-600 disabled:opacity-30"
           >
             ✕
           </button>

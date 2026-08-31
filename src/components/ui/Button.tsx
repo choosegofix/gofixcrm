@@ -3,12 +3,12 @@ import Link from "next/link";
 
 const variants = {
   primary:
-    "bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-blue-600",
+    "bg-[#D9480F] text-white hover:bg-[#B83A0A] focus-visible:outline-[#D9480F]",
   secondary:
-    "bg-white text-gray-900 border border-gray-300 hover:bg-gray-50 focus-visible:outline-gray-400",
+    "bg-white text-[#16233A] border border-[#DDD6C7] hover:bg-[#FAF7F1] focus-visible:outline-[#5B6B82]",
   danger:
-    "bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600",
-  ghost: "text-gray-700 hover:bg-gray-100 focus-visible:outline-gray-400",
+    "bg-[#8C2F1F] text-white hover:bg-[#732416] focus-visible:outline-[#8C2F1F]",
+  ghost: "text-[#5B6B82] hover:bg-[#EEEAE1] focus-visible:outline-[#5B6B82]",
 };
 
 const sizes = {

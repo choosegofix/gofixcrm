@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   jobStatusColors,
   jobStatusLabels,
@@ -37,8 +39,8 @@ export default async function JobsPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Jobs</h1>
-          <p className="text-sm text-gray-500">{jobs.length} jobs</p>
+          <h1 className="text-xl font-semibold text-[#16233A]">Jobs</h1>
+          <p className="text-sm text-[#5B6B82]">{jobs.length} jobs</p>
         </div>
         <LinkButton href="/jobs/new">+ New job</LinkButton>
       </div>
@@ -47,7 +49,7 @@ export default async function JobsPage({
         <Link
           href="/jobs"
           className={`rounded-full border px-3 py-1 text-xs font-medium ${
-            !status ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600"
+            !status ? "border-[#D9480F] bg-[#FBE7DB] text-[#D9480F]" : "border-[#E3DDD0] text-[#5B6B82]"
           }`}
         >
           All
@@ -57,7 +59,7 @@ export default async function JobsPage({
             key={s}
             href={`/jobs?status=${s}`}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              status === s ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600"
+              status === s ? "border-[#D9480F] bg-[#FBE7DB] text-[#D9480F]" : "border-[#E3DDD0] text-[#5B6B82]"
             }`}
           >
             {jobStatusLabels[s]}
@@ -68,10 +70,20 @@ export default async function JobsPage({
       <Card>
         <CardBody className="p-0">
           {jobs.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500">No jobs match this filter.</p>
+            <EmptyState
+              icon={ClipboardList}
+              title={status ? "No jobs match this filter" : "No jobs yet"}
+              description={
+                status
+                  ? "Try a different status, or clear the filter to see every job."
+                  : "Create a job directly, or approve a quote to generate one automatically."
+              }
+              actionHref={status ? "/jobs" : "/jobs/new"}
+              actionLabel={status ? "Clear filter" : "+ New job"}
+            />
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
+              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                 <tr>
                   <th className="px-5 py-2 font-medium">Job</th>
                   <th className="px-5 py-2 font-medium">Client</th>
@@ -80,20 +92,20 @@ export default async function JobsPage({
                   <th className="px-5 py-2 font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#EFEAE0]">
                 {jobs.map((j) => (
-                  <tr key={j.id} className="hover:bg-gray-50">
+                  <tr key={j.id} className="hover:bg-[#FAF7F1]">
                     <td className="px-5 py-3">
-                      <Link href={`/jobs/${j.id}`} className="font-medium text-gray-900 hover:text-blue-600">
+                      <Link href={`/jobs/${j.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
                         {j.jobNumber} · {j.title}
                       </Link>
-                      <p className="text-xs text-gray-500">{j.property.addressLine1}</p>
+                      <p className="text-xs text-[#5B6B82]">{j.property.addressLine1}</p>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{j.client.name}</td>
+                    <td className="px-5 py-3 text-[#5B6B82]">{j.client.name}</td>
                     <td className="px-5 py-3">
                       <Badge className={tradeColors[j.trade]}>{tradeLabels[j.trade]}</Badge>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">
+                    <td className="px-5 py-3 text-[#5B6B82]">
                       {j.scheduledStart ? format(j.scheduledStart, "MMM d, yyyy") : "—"}
                     </td>
                     <td className="px-5 py-3">

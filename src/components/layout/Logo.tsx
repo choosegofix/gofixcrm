@@ -5,7 +5,7 @@ export function Logo({ size = "md" }: { size?: "sm" | "md" }) {
   const icon = size === "sm" ? 16 : 18;
   return (
     <div
-      className={`flex ${box} shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-sm`}
+      className={`flex ${box} shrink-0 items-center justify-center rounded-lg bg-[#D9480F] text-white shadow-sm`}
     >
       <Wrench size={icon} strokeWidth={2.25} />
     </div>

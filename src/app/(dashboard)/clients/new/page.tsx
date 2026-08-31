@@ -9,7 +9,7 @@ export default async function NewClientPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">New client</h1>
+      <h1 className="text-xl font-semibold text-[#16233A]">New client</h1>
 
       <form action={createClient} className="space-y-6">
         <Card>

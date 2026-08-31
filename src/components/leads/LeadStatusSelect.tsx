@@ -12,7 +12,7 @@ export function LeadStatusSelect({ leadId, status }: { leadId: string; status: L
       defaultValue={status}
       disabled={pending}
       onChange={(e) => startTransition(() => updateLeadStatus(leadId, e.target.value as LeadStatus))}
-      className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-60"
+      className="rounded-md border border-[#DDD6C7] px-2 py-1 text-xs font-medium text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F] disabled:opacity-60"
     >
       {Object.entries(leadStatusLabels).map(([value, label]) => (
         <option key={value} value={value}>

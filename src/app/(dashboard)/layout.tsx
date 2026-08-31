@@ -1,6 +1,8 @@
 import { requireUser } from "@/lib/session";
 import { signOut } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { Logo } from "@/components/layout/Logo";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { roleLabels } from "@/lib/labels";
 import type { Role } from "@prisma/client";
 
@@ -12,21 +14,24 @@ export default async function DashboardLayout({
   const user = await requireUser();
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-white md:block">
-        <div className="border-b border-gray-200 px-5 py-4">
-          <p className="font-bold text-gray-900">GoFix Services</p>
-          <p className="text-xs text-gray-500">CRM &amp; Field Ops</p>
+    <div className="flex min-h-screen bg-[#FAF7F1]">
+      <aside className="hidden w-60 shrink-0 bg-[#16233A] md:block">
+        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
+          <Logo size="sm" />
+          <div>
+            <p className="font-semibold text-white">GoFix Services</p>
+            <p className="text-xs text-[#8291A6]">CRM &amp; Field Ops</p>
+          </div>
         </div>
         <Sidebar role={user.role} />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3">
-          <div className="md:hidden font-bold text-gray-900">GoFix Services</div>
+        <header className="flex items-center justify-between border-b border-[#E3DDD0] bg-white px-6 py-3">
+          <MobileNav role={user.role} />
           <div className="ml-auto flex items-center gap-3">
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user.name}</p>
-              <p className="text-xs text-gray-500">{roleLabels[user.role as Role]}</p>
+              <p className="text-sm font-medium text-[#16233A]">{user.name}</p>
+              <p className="text-xs text-[#5B6B82]">{roleLabels[user.role as Role]}</p>
             </div>
             <form
               action={async () => {
@@ -36,7 +41,7 @@ export default async function DashboardLayout({
             >
               <button
                 type="submit"
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                className="rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm text-[#16233A] hover:bg-[#FAF7F1]"
               >
                 Sign out
               </button>

@@ -17,9 +17,9 @@ export const tradeLabels: Record<Trade, string> = {
 };
 
 export const tradeColors: Record<Trade, string> = {
-  HVAC: "bg-sky-100 text-sky-800 border-sky-200",
-  ELECTRICAL: "bg-amber-100 text-amber-800 border-amber-200",
-  PLUMBING: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  HVAC: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
+  ELECTRICAL: "bg-[#FBEEDC] text-[#8A5A19] border-[#E9CBA0]",
+  PLUMBING: "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
 };
 
 export const jobStatusLabels: Record<JobStatus, string> = {
@@ -33,13 +33,13 @@ export const jobStatusLabels: Record<JobStatus, string> = {
 };
 
 export const jobStatusColors: Record<JobStatus, string> = {
-  REQUESTED: "bg-gray-100 text-gray-700 border-gray-200",
-  SCHEDULED: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-200",
-  COMPLETED: "bg-teal-100 text-teal-800 border-teal-200",
-  INVOICED: "bg-purple-100 text-purple-800 border-purple-200",
-  PAID: "bg-green-100 text-green-800 border-green-200",
-  CANCELLED: "bg-red-100 text-red-800 border-red-200",
+  REQUESTED: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
+  SCHEDULED: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
+  IN_PROGRESS: "bg-[#FBE7DB] text-[#B83A0A] border-[#F0BFA0]",
+  COMPLETED: "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  INVOICED: "bg-[#EFE3ED] text-[#6B3A5E] border-[#D9C0D3]",
+  PAID: "bg-[#DEEBDD] text-[#1F5C33] border-[#B9D6B7]",
+  CANCELLED: "bg-[#F3DEDA] text-[#8C2F1F] border-[#E0B3A9]",
 };
 
 export const jobStatusOrder: JobStatus[] = [
@@ -77,11 +77,11 @@ export const visitStatusLabels: Record<VisitStatus, string> = {
 };
 
 export const visitStatusColors: Record<VisitStatus, string> = {
-  SCHEDULED: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-200",
-  COMPLETED: "bg-teal-100 text-teal-800 border-teal-200",
-  CANCELLED: "bg-red-100 text-red-800 border-red-200",
-  MISSED: "bg-orange-100 text-orange-800 border-orange-200",
+  SCHEDULED: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
+  IN_PROGRESS: "bg-[#FBE7DB] text-[#B83A0A] border-[#F0BFA0]",
+  COMPLETED: "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  CANCELLED: "bg-[#F3DEDA] text-[#8C2F1F] border-[#E0B3A9]",
+  MISSED: "bg-[#FBEEDC] text-[#8A5A19] border-[#E9CBA0]",
 };
 
 export const invoiceStatusLabels: Record<InvoiceStatus, string> = {
@@ -91,6 +91,24 @@ export const invoiceStatusLabels: Record<InvoiceStatus, string> = {
   PAID: "Paid",
   OVERDUE: "Overdue",
   VOID: "Void",
+};
+
+export const invoiceStatusColors: Record<InvoiceStatus, string> = {
+  DRAFT: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
+  SENT: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
+  PARTIALLY_PAID: "bg-[#FBE7DB] text-[#B83A0A] border-[#F0BFA0]",
+  PAID: "bg-[#DEEBDD] text-[#1F5C33] border-[#B9D6B7]",
+  OVERDUE: "bg-[#F3DEDA] text-[#8C2F1F] border-[#E0B3A9]",
+  VOID: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
+};
+
+export const quoteStatusColors: Record<QuoteStatus, string> = {
+  DRAFT: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
+  SENT: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
+  VIEWED: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
+  APPROVED: "bg-[#DEEBDD] text-[#1F5C33] border-[#B9D6B7]",
+  DECLINED: "bg-[#F3DEDA] text-[#8C2F1F] border-[#E0B3A9]",
+  EXPIRED: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
 };
 
 export const pricingResponsibilityLabels: Record<PricingResponsibility, string> = {

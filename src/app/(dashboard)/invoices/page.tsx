@@ -5,18 +5,9 @@ import { requireUser } from "@/lib/session";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { invoiceStatusLabels } from "@/lib/labels";
+import { invoiceStatusColors, invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
-
-const statusColors: Record<string, string> = {
-  DRAFT: "border-gray-200 bg-gray-100 text-gray-700",
-  SENT: "border-indigo-200 bg-indigo-100 text-indigo-800",
-  PARTIALLY_PAID: "border-amber-200 bg-amber-100 text-amber-800",
-  PAID: "border-green-200 bg-green-100 text-green-800",
-  OVERDUE: "border-red-200 bg-red-100 text-red-800",
-  VOID: "border-gray-200 bg-gray-100 text-gray-500",
-};
 
 export default async function InvoicesPage() {
   await requireUser();
@@ -36,8 +27,8 @@ export default async function InvoicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Invoices</h1>
-          <p className="text-sm text-gray-500">{formatCurrency(outstanding)} outstanding</p>
+          <h1 className="text-xl font-semibold text-[#16233A]">Invoices</h1>
+          <p className="text-sm text-[#5B6B82]">{formatCurrency(outstanding)} outstanding</p>
         </div>
         <LinkButton href="/invoices/new">+ New invoice</LinkButton>
       </div>
@@ -45,10 +36,10 @@ export default async function InvoicesPage() {
       <Card>
         <CardBody className="p-0">
           {invoices.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500">No invoices yet.</p>
+            <p className="px-5 py-6 text-sm text-[#5B6B82]">No invoices yet.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
+              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                 <tr>
                   <th className="px-5 py-2 font-medium">Invoice</th>
                   <th className="px-5 py-2 font-medium">Client</th>
@@ -57,19 +48,19 @@ export default async function InvoicesPage() {
                   <th className="px-5 py-2 font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#EFEAE0]">
                 {invoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-gray-50">
+                  <tr key={inv.id} className="hover:bg-[#FAF7F1]">
                     <td className="px-5 py-3">
-                      <Link href={`/invoices/${inv.id}`} className="font-medium text-gray-900 hover:text-blue-600">
+                      <Link href={`/invoices/${inv.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
                         {inv.invoiceNumber}
                       </Link>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{inv.client.name}</td>
-                    <td className="px-5 py-3 text-gray-600">{formatCurrency(inv.total)}</td>
-                    <td className="px-5 py-3 text-gray-600">{format(inv.dueDate, "MMM d, yyyy")}</td>
+                    <td className="px-5 py-3 text-[#5B6B82]">{inv.client.name}</td>
+                    <td className="px-5 py-3 text-[#5B6B82]">{formatCurrency(inv.total)}</td>
+                    <td className="px-5 py-3 text-[#5B6B82]">{format(inv.dueDate, "MMM d, yyyy")}</td>
                     <td className="px-5 py-3">
-                      <Badge className={statusColors[inv.status]}>{invoiceStatusLabels[inv.status]}</Badge>
+                      <Badge className={invoiceStatusColors[inv.status]}>{invoiceStatusLabels[inv.status]}</Badge>
                     </td>
                   </tr>
                 ))}

@@ -20,8 +20,8 @@ export default async function UsersSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Team &amp; settings</h1>
-        <p className="text-sm text-gray-500">Manage staff accounts and roles</p>
+        <h1 className="text-xl font-semibold text-[#16233A]">Team &amp; settings</h1>
+        <p className="text-sm text-[#5B6B82]">Manage staff accounts and roles</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -30,7 +30,7 @@ export default async function UsersSettingsPage() {
             <CardHeader title="Team members" />
             <CardBody className="p-0">
               <table className="w-full text-sm">
-                <thead className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500">
+                <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                   <tr>
                     <th className="px-5 py-2 font-medium">Name</th>
                     <th className="px-5 py-2 font-medium">Email</th>
@@ -38,18 +38,18 @@ export default async function UsersSettingsPage() {
                     <th className="px-5 py-2 font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#EFEAE0]">
                   {users.map((u) => (
                     <tr key={u.id}>
-                      <td className="px-5 py-3 font-medium text-gray-900">{u.name}</td>
-                      <td className="px-5 py-3 text-gray-600">{u.email}</td>
-                      <td className="px-5 py-3 text-gray-600">{roleLabels[u.role]}</td>
+                      <td className="px-5 py-3 font-medium text-[#16233A]">{u.name}</td>
+                      <td className="px-5 py-3 text-[#5B6B82]">{u.email}</td>
+                      <td className="px-5 py-3 text-[#5B6B82]">{roleLabels[u.role]}</td>
                       <td className="px-5 py-3">
                         <Badge
                           className={
                             u.isActive
-                              ? "border-green-200 bg-green-100 text-green-800"
-                              : "border-gray-200 bg-gray-100 text-gray-500"
+                              ? "border-[#B9D6B7] bg-[#DEEBDD] text-[#1F5C33]"
+                              : "border-[#E3DDD0] bg-[#EEEAE1] text-[#5B6B82]"
                           }
                         >
                           {u.isActive ? "Active" : "Deactivated"}
