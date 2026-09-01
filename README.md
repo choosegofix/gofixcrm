@@ -46,7 +46,28 @@ just the plan below). Right now:
 - ✅ **Subcontractor scoping**: subcontractor logins can only see and act on
   jobs they (or their crew) are actually assigned to — enforced on the
   server, not just hidden in the menu. A demo subcontractor account is
-  included in the seed data (see the login table below).
+  included in the seed data (see the login table below). Subs can edit a
+  job's description and internal notes on their own assigned jobs, same as
+  office staff, but can't reassign crews or see other companies' jobs.
+- ✅ **Editable job description & notes**: every job ticket has a
+  description box (what the job actually is) and a separate internal notes
+  box (gate codes, parking, anything office/field/subs should know) —
+  both editable in place, right on the job page.
+- ✅ **Directions on the job page**: Google Maps / Apple Maps / Waze links
+  sit right next to the job address, using the geocoded coordinates when
+  available.
+- ✅ **Crew & contact notes**: crews have an internal notes box (reliability,
+  preferences, license info) and their assigned jobs link straight to the
+  job page. Every contact in the Contacts directory now has its own detail
+  page with a notes box too — both are on the creation forms as well, not
+  just after the fact.
+- ✅ **Modern UI pass**: refreshed Dashboard (quick-action buttons, accented
+  stat cards, hover affordances) and Jobs list (toolbar-style filters,
+  trade-colored rows), plus every dropdown in the app was rebuilt as a
+  custom-rendered component — fixes a Windows Chrome bug where native
+  `<select>` popups silently ignore custom fonts. On mobile, the
+  hamburger menu now has the signed-in user's name and Sign out pinned to
+  the bottom of the slide-out drawer.
 - ⏳ **Photo uploads & document storage** (the CompanyCam layer): not built
   yet. This needs your Google Workspace upgrade and Shared Drive set up
   first — see "Setting up Google Drive storage" below for what that will
@@ -249,14 +270,18 @@ src/
   app/
     login/             Staff sign-in page
     (dashboard)/        Everything behind login: dashboard, clients, jobs,
-                         schedule, crews, contacts, map, checklist templates,
+                         schedule, crews, contacts (incl. a per-contact
+                         detail/notes page), map, checklist templates,
                          team settings
     actions/            Server-side functions that create/update records
     api/auth/            Login/session plumbing (Auth.js)
   components/
     ui/                 Small reusable building blocks (buttons, form fields,
-                         cards, the URL-based filter dropdown)
-    layout/              The sidebar/header shell, notification bell
+                         cards, the custom dropdown used everywhere in place
+                         of a native <select>, the URL-based filter dropdown,
+                         the Google/Apple Maps/Waze directions links)
+    layout/              The sidebar/header shell, mobile nav drawer,
+                         notification bell
     jobs/                Job-hub bits: checklist editor, comment composer
                          with @mention autocomplete, schedule-visit button
     map/                 The Leaflet active-jobs map
