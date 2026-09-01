@@ -83,10 +83,10 @@ export default async function ContactsPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           <div className="flex flex-wrap items-center gap-3">
-            <form className="flex-1">
+            <form className="min-w-0 flex-1">
               <input
                 type="text"
                 name="q"
@@ -107,6 +107,7 @@ export default async function ContactsPage({
                   description="Try clearing the search or type filter. New leads and crews are added here automatically."
                 />
               ) : (
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                     <tr>
@@ -164,6 +165,7 @@ export default async function ContactsPage({
                     })}
                   </tbody>
                 </table>
+                </div>
               )}
             </CardBody>
           </Card>

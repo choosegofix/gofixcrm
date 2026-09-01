@@ -24,11 +24,11 @@ export default async function UsersSettingsPage() {
         <p className="text-sm text-[#5B6B82]">Manage staff accounts and roles</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 lg:col-span-2">
           <Card>
             <CardHeader title="Team members" />
-            <CardBody className="p-0">
+            <CardBody className="overflow-x-auto p-0">
               <table className="w-full text-sm">
                 <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                   <tr>

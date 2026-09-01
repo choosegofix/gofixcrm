@@ -73,34 +73,58 @@ export default async function InvoicesPage({
               actionLabel={hasFilter ? "Clear filter" : "+ New invoice"}
             />
           ) : (
-            <table className="w-full text-sm">
-              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
-                <tr>
-                  <th className="px-5 py-2 font-medium">Invoice</th>
-                  <th className="px-5 py-2 font-medium">Client</th>
-                  <th className="px-5 py-2 font-medium">Total</th>
-                  <th className="px-5 py-2 font-medium">Due</th>
-                  <th className="px-5 py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EFEAE0]">
+            <>
+              <ul className="divide-y divide-[#EFEAE0] lg:hidden">
                 {invoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-[#FAF7F1]">
-                    <td className="px-5 py-3">
-                      <Link href={`/invoices/${inv.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
-                        {inv.invoiceNumber}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{inv.client.name}</td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{formatCurrency(inv.total)}</td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{format(inv.dueDate, "MMM d, yyyy")}</td>
-                    <td className="px-5 py-3">
-                      <Badge className={invoiceStatusColors[inv.status]}>{invoiceStatusLabels[inv.status]}</Badge>
-                    </td>
-                  </tr>
+                  <li key={inv.id}>
+                    <Link href={`/invoices/${inv.id}`} className="block px-4 py-3 transition hover:bg-[#FAF7F1]">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium text-[#16233A]">{inv.invoiceNumber}</p>
+                        <span className="tabular-nums font-mono text-sm text-[#16233A]">
+                          {formatCurrency(inv.total)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#5B6B82]">{inv.client.name}</p>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <Badge className={invoiceStatusColors[inv.status]}>{invoiceStatusLabels[inv.status]}</Badge>
+                        <span className="text-xs text-[#5B6B82]">Due {format(inv.dueDate, "MMM d, yyyy")}</span>
+                      </div>
+                    </Link>
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
+                    <tr>
+                      <th className="px-5 py-2 font-medium">Invoice</th>
+                      <th className="px-5 py-2 font-medium">Client</th>
+                      <th className="px-5 py-2 font-medium">Total</th>
+                      <th className="px-5 py-2 font-medium">Due</th>
+                      <th className="px-5 py-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EFEAE0]">
+                    {invoices.map((inv) => (
+                      <tr key={inv.id} className="hover:bg-[#FAF7F1]">
+                        <td className="px-5 py-3">
+                          <Link href={`/invoices/${inv.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
+                            {inv.invoiceNumber}
+                          </Link>
+                        </td>
+                        <td className="px-5 py-3 text-[#5B6B82]">{inv.client.name}</td>
+                        <td className="px-5 py-3 text-[#5B6B82]">{formatCurrency(inv.total)}</td>
+                        <td className="px-5 py-3 text-[#5B6B82]">{format(inv.dueDate, "MMM d, yyyy")}</td>
+                        <td className="px-5 py-3">
+                          <Badge className={invoiceStatusColors[inv.status]}>{invoiceStatusLabels[inv.status]}</Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardBody>
       </Card>

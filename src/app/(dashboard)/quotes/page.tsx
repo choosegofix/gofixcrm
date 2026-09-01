@@ -75,38 +75,62 @@ export default async function QuotesPage({
               actionLabel={hasFilter ? "Clear filters" : "+ New quote"}
             />
           ) : (
-            <table className="w-full text-sm">
-              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
-                <tr>
-                  <th className="px-5 py-2 font-medium">Quote</th>
-                  <th className="px-5 py-2 font-medium">Client</th>
-                  <th className="px-5 py-2 font-medium">Trade</th>
-                  <th className="px-5 py-2 font-medium">Total</th>
-                  <th className="px-5 py-2 font-medium">Created</th>
-                  <th className="px-5 py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EFEAE0]">
+            <>
+              <ul className="divide-y divide-[#EFEAE0] lg:hidden">
                 {quotes.map((q) => (
-                  <tr key={q.id} className="hover:bg-[#FAF7F1]">
-                    <td className="px-5 py-3">
-                      <Link href={`/quotes/${q.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
+                  <li key={q.id}>
+                    <Link href={`/quotes/${q.id}`} className="block px-4 py-3 transition hover:bg-[#FAF7F1]">
+                      <p className="font-medium text-[#16233A]">
                         {q.quoteNumber} · {q.title}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{q.client.name}</td>
-                    <td className="px-5 py-3">
-                      <Badge className={tradeColors[q.trade]}>{tradeLabels[q.trade]}</Badge>
-                    </td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{formatCurrency(q.total)}</td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{format(q.createdAt, "MMM d, yyyy")}</td>
-                    <td className="px-5 py-3">
-                      <Badge className={quoteStatusColors[q.status]}>{quoteStatusLabels[q.status]}</Badge>
-                    </td>
-                  </tr>
+                      </p>
+                      <p className="text-xs text-[#5B6B82]">{q.client.name}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <Badge className={tradeColors[q.trade]}>{tradeLabels[q.trade]}</Badge>
+                        <Badge className={quoteStatusColors[q.status]}>{quoteStatusLabels[q.status]}</Badge>
+                        <span className="tabular-nums ml-auto font-mono text-xs text-[#5B6B82]">
+                          {formatCurrency(q.total)}
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
+                    <tr>
+                      <th className="px-5 py-2 font-medium">Quote</th>
+                      <th className="px-5 py-2 font-medium">Client</th>
+                      <th className="px-5 py-2 font-medium">Trade</th>
+                      <th className="px-5 py-2 font-medium">Total</th>
+                      <th className="px-5 py-2 font-medium">Created</th>
+                      <th className="px-5 py-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EFEAE0]">
+                    {quotes.map((q) => (
+                      <tr key={q.id} className="hover:bg-[#FAF7F1]">
+                        <td className="px-5 py-3">
+                          <Link href={`/quotes/${q.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
+                            {q.quoteNumber} · {q.title}
+                          </Link>
+                        </td>
+                        <td className="px-5 py-3 text-[#5B6B82]">{q.client.name}</td>
+                        <td className="px-5 py-3">
+                          <Badge className={tradeColors[q.trade]}>{tradeLabels[q.trade]}</Badge>
+                        </td>
+                        <td className="px-5 py-3 text-[#5B6B82]">{formatCurrency(q.total)}</td>
+                        <td className="px-5 py-3 text-[#5B6B82]">{format(q.createdAt, "MMM d, yyyy")}</td>
+                        <td className="px-5 py-3">
+                          <Badge className={quoteStatusColors[q.status]}>{quoteStatusLabels[q.status]}</Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardBody>
       </Card>

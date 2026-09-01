@@ -42,28 +42,30 @@ export default async function ClientsPage() {
               actionLabel="+ New client"
             />
           ) : (
-            <table className="w-full text-sm">
-              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
-                <tr>
-                  <th className="px-5 py-2 font-medium">Name</th>
-                  <th className="px-5 py-2 font-medium">Properties</th>
-                  <th className="px-5 py-2 font-medium">Jobs</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EFEAE0]">
-                {clients.map((c) => (
-                  <tr key={c.id} className="hover:bg-[#FAF7F1]">
-                    <td className="px-5 py-3">
-                      <Link href={`/clients/${c.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
-                        {c.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{c.properties.length}</td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{c._count.jobs}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
+                  <tr>
+                    <th className="px-5 py-2 font-medium">Name</th>
+                    <th className="px-5 py-2 font-medium">Properties</th>
+                    <th className="px-5 py-2 font-medium">Jobs</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#EFEAE0]">
+                  {clients.map((c) => (
+                    <tr key={c.id} className="hover:bg-[#FAF7F1]">
+                      <td className="px-5 py-3">
+                        <Link href={`/clients/${c.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
+                          {c.name}
+                        </Link>
+                      </td>
+                      <td className="px-5 py-3 text-[#5B6B82]">{c.properties.length}</td>
+                      <td className="px-5 py-3 text-[#5B6B82]">{c._count.jobs}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardBody>
       </Card>

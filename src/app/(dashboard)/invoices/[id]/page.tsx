@@ -68,6 +68,7 @@ export default async function InvoiceDetailPage({
       <Card>
         <CardHeader title="Line items" />
         <CardBody className="p-0">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-[#E3DDD0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
               <tr>
@@ -94,6 +95,7 @@ export default async function InvoiceDetailPage({
               ))}
             </tbody>
           </table>
+          </div>
           <div className="border-t border-[#E3DDD0] px-5 py-4">
             <div className="ml-auto max-w-xs space-y-1 text-sm">
               <div className="flex justify-between text-[#5B6B82]">

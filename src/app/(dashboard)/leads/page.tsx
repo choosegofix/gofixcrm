@@ -119,42 +119,26 @@ export default async function LeadsPage({
               actionLabel={hasFilter ? "Clear filters" : "+ New lead"}
             />
           ) : (
-            <table className="w-full text-sm">
-              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
-                <tr>
-                  <th className="px-5 py-2 font-medium">Contact</th>
-                  <th className="px-5 py-2 font-medium">Trade</th>
-                  <th className="px-5 py-2 font-medium">Area</th>
-                  <th className="px-5 py-2 font-medium">Received</th>
-                  <th className="px-5 py-2 font-medium">Status</th>
-                  <th className="px-5 py-2 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EFEAE0]">
+            <>
+              <ul className="divide-y divide-[#EFEAE0] lg:hidden">
                 {leads.map((l) => (
-                  <tr key={l.id}>
-                    <td className="px-5 py-3">
+                  <li key={l.id} className="space-y-2 px-4 py-3">
+                    <div>
                       <p className="font-medium text-[#16233A]">{l.contactName}</p>
                       <p className="text-xs text-[#5B6B82]">
                         {l.client ? l.client.name : l.contactEmail || l.contactPhone || "New prospect"}
                         {formatLeadSource(l.source) && ` · ${formatLeadSource(l.source)}`}
                       </p>
-                    </td>
-                    <td className="px-5 py-3">
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <Badge className={tradeColors[l.trade]}>{tradeLabels[l.trade]}</Badge>
-                    </td>
-                    <td className="px-5 py-3">
-                      {l.serviceArea ? (
+                      {l.serviceArea && (
                         <Badge className={areaColor(l.serviceArea.name)}>{l.serviceArea.name}</Badge>
-                      ) : (
-                        <span className="text-xs text-[#8A93A3]">—</span>
                       )}
-                    </td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{format(l.createdAt, "MMM d, yyyy")}</td>
-                    <td className="px-5 py-3">
+                      <span className="ml-auto text-xs text-[#5B6B82]">{format(l.createdAt, "MMM d, yyyy")}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
                       <LeadStatusSelect leadId={l.id} status={l.status} />
-                    </td>
-                    <td className="px-5 py-3 text-right">
                       {l.clientId && l.propertyId ? (
                         <Link
                           href={`/quotes/new?leadId=${l.id}&clientId=${l.clientId}&propertyId=${l.propertyId}`}
@@ -165,11 +149,65 @@ export default async function LeadsPage({
                       ) : (
                         <span className="text-xs text-[#8A93A3]">Add a client to quote</span>
                       )}
-                    </td>
-                  </tr>
+                    </div>
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
+                    <tr>
+                      <th className="px-5 py-2 font-medium">Contact</th>
+                      <th className="px-5 py-2 font-medium">Trade</th>
+                      <th className="px-5 py-2 font-medium">Area</th>
+                      <th className="px-5 py-2 font-medium">Received</th>
+                      <th className="px-5 py-2 font-medium">Status</th>
+                      <th className="px-5 py-2 font-medium"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EFEAE0]">
+                    {leads.map((l) => (
+                      <tr key={l.id}>
+                        <td className="px-5 py-3">
+                          <p className="font-medium text-[#16233A]">{l.contactName}</p>
+                          <p className="text-xs text-[#5B6B82]">
+                            {l.client ? l.client.name : l.contactEmail || l.contactPhone || "New prospect"}
+                            {formatLeadSource(l.source) && ` · ${formatLeadSource(l.source)}`}
+                          </p>
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge className={tradeColors[l.trade]}>{tradeLabels[l.trade]}</Badge>
+                        </td>
+                        <td className="px-5 py-3">
+                          {l.serviceArea ? (
+                            <Badge className={areaColor(l.serviceArea.name)}>{l.serviceArea.name}</Badge>
+                          ) : (
+                            <span className="text-xs text-[#8A93A3]">—</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-[#5B6B82]">{format(l.createdAt, "MMM d, yyyy")}</td>
+                        <td className="px-5 py-3">
+                          <LeadStatusSelect leadId={l.id} status={l.status} />
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {l.clientId && l.propertyId ? (
+                            <Link
+                              href={`/quotes/new?leadId=${l.id}&clientId=${l.clientId}&propertyId=${l.propertyId}`}
+                              className="text-xs font-medium text-[#D9480F] hover:underline"
+                            >
+                              Create quote →
+                            </Link>
+                          ) : (
+                            <span className="text-xs text-[#8A93A3]">Add a client to quote</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardBody>
       </Card>
