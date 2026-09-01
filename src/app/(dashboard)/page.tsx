@@ -156,8 +156,8 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+        <Card className="min-w-0">
           <CardHeader
             title="Upcoming visits"
             action={
@@ -200,7 +200,7 @@ export default async function DashboardPage() {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader
             title={isSubcontractor ? "Your jobs" : "Recent jobs"}
             action={

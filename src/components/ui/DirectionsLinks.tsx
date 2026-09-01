@@ -1,4 +1,18 @@
+"use client";
+
 import { Navigation } from "lucide-react";
+
+function openDirections(e: React.MouseEvent, url: string) {
+  e.preventDefault();
+  // The URL itself is each provider's official "universal link" format, so
+  // the OS opens the native app automatically if it's installed. This just
+  // guarantees a visible fallback either way: a real new tab if the popup
+  // isn't blocked, or the current tab as a last resort if it is.
+  const win = window.open(url, "_blank", "noopener,noreferrer");
+  if (!win) {
+    window.location.href = url;
+  }
+}
 
 export function DirectionsLinks({
   address,
@@ -24,15 +38,15 @@ export function DirectionsLinks({
     <span className="inline-flex items-center gap-1.5 text-xs text-[#8A93A3]">
       <Navigation size={12} strokeWidth={2} />
       Directions:
-      <a href={gmaps} target="_blank" rel="noopener noreferrer" className={linkClass}>
+      <a href={gmaps} onClick={(e) => openDirections(e, gmaps)} className={linkClass}>
         Google Maps
       </a>
       ·
-      <a href={appleMaps} target="_blank" rel="noopener noreferrer" className={linkClass}>
+      <a href={appleMaps} onClick={(e) => openDirections(e, appleMaps)} className={linkClass}>
         Apple Maps
       </a>
       ·
-      <a href={waze} target="_blank" rel="noopener noreferrer" className={linkClass}>
+      <a href={waze} onClick={(e) => openDirections(e, waze)} className={linkClass}>
         Waze
       </a>
     </span>

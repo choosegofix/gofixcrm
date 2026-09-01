@@ -238,7 +238,7 @@ export default async function JobDetailPage({
           <summary className="cursor-pointer rounded-full border border-dashed border-[#DDD6C7] px-2.5 py-0.5 font-medium text-[#5B6B82] hover:border-[#D9480F] hover:text-[#D9480F]">
             + Tag
           </summary>
-          <form action={addTagForJob} className="mt-2 flex items-center gap-2 rounded-md border border-[#E3DDD0] bg-white p-2 shadow-sm">
+          <form action={addTagForJob} className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-[#E3DDD0] bg-white p-2 shadow-sm">
             {availableTags.length > 0 && (
               <Select
                 name="tagId"
@@ -266,8 +266,8 @@ export default async function JobDetailPage({
         </details>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <Card>
             <CardHeader title="Description" />
             <CardBody>
@@ -358,13 +358,13 @@ export default async function JobDetailPage({
                   ))}
                 </ul>
               )}
-              <form action={createTaskForJob} className="flex items-center gap-2">
+              <form action={createTaskForJob} className="flex flex-wrap items-center gap-2">
                 <input
                   type="text"
                   name="title"
                   placeholder="Add a task…"
                   required
-                  className="flex-1 rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F]"
+                  className="min-w-0 flex-1 rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F]"
                 />
                 <label className="flex items-center gap-1 text-xs text-[#5B6B82]">
                   <input type="checkbox" name="requiresPhoto" /> Photo
@@ -411,7 +411,7 @@ export default async function JobDetailPage({
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader title="Job notes" subtitle="Internal — not visible to clients" />
             <CardBody>

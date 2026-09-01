@@ -63,6 +63,9 @@ export function ActiveJobsMap({ jobs }: { jobs: MapJob[] }) {
         const linkStyle =
           "display:inline-block;margin-top:4px;margin-right:8px;font-size:12px;color:#D9480F;text-decoration:none;";
 
+        const openDirections = (url: string) =>
+          `window.open('${url}','_blank','noopener,noreferrer')||(window.location.href='${url}');return false;`;
+
         const marker = L.marker([job.lat, job.lng], { icon }).addTo(map);
         marker.bindPopup(
           `<div style="min-width:180px">` +
@@ -71,9 +74,9 @@ export function ActiveJobsMap({ jobs }: { jobs: MapJob[] }) {
             `<a href="/jobs/${job.id}" style="color:#D9480F;font-weight:600;font-size:13px">Open job →</a>` +
             `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #E3DDD0">` +
             `<span style="font-size:11px;color:#8A93A3">Directions:</span><br/>` +
-            `<a href="${gmaps}" target="_blank" rel="noopener noreferrer" style="${linkStyle}">Google Maps</a>` +
-            `<a href="${appleMaps}" target="_blank" rel="noopener noreferrer" style="${linkStyle}">Apple Maps</a>` +
-            `<a href="${waze}" target="_blank" rel="noopener noreferrer" style="${linkStyle}">Waze</a>` +
+            `<a href="${gmaps}" onclick="${openDirections(gmaps)}" style="${linkStyle}">Google Maps</a>` +
+            `<a href="${appleMaps}" onclick="${openDirections(appleMaps)}" style="${linkStyle}">Apple Maps</a>` +
+            `<a href="${waze}" onclick="${openDirections(waze)}" style="${linkStyle}">Waze</a>` +
             `</div>` +
             `</div>`
         );
