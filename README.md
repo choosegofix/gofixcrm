@@ -67,7 +67,9 @@ just the plan below). Right now:
   custom-rendered component — fixes a Windows Chrome bug where native
   `<select>` popups silently ignore custom fonts. On mobile, the
   hamburger menu now has the signed-in user's name and Sign out pinned to
-  the bottom of the slide-out drawer.
+  the bottom of the slide-out drawer, and the Jobs list switches from a
+  data table to a stacked card layout below desktop width (checked down
+  to a 320px-wide phone) instead of forcing the page to scroll sideways.
 - ⏳ **Photo uploads & document storage** (the CompanyCam layer): not built
   yet. This needs your Google Workspace upgrade and Shared Drive set up
   first — see "Setting up Google Drive storage" below for what that will

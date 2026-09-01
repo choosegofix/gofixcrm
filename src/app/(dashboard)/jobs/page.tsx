@@ -125,73 +125,122 @@ export default async function JobsPage({
               actionLabel={hasFilter ? "Clear filters" : "+ New job"}
             />
           ) : (
-            <table className="w-full text-sm">
-              <thead className="border-b border-[#EFEAE0] bg-[#FAF9F5] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
-                <tr>
-                  <th className="py-2 pl-5 pr-2 font-medium"></th>
-                  <th className="px-2 py-2 font-medium">Job</th>
-                  <th className="px-2 py-2 font-medium">Client</th>
-                  <th className="px-2 py-2 font-medium">Trade</th>
-                  <th className="px-2 py-2 font-medium">Area</th>
-                  <th className="px-2 py-2 font-medium">Scheduled</th>
-                  <th className="px-2 py-2 font-medium">Status</th>
-                  <th className="py-2 pl-2 pr-5 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EFEAE0]">
+            <>
+              {/* Card list below `lg` — a data table can't fit this many
+                  columns on a phone or tablet without horizontal scroll,
+                  and this app is used in the field. */}
+              <ul className="divide-y divide-[#EFEAE0] lg:hidden">
                 {jobs.map((j) => (
-                  <tr key={j.id} className="group transition hover:bg-[#FAF7F1]">
-                    <td className="py-3 pl-5 pr-2">
-                      <span
-                        className="block h-8 w-1 rounded-full"
-                        style={{ backgroundColor: tradeAccent[j.trade] }}
-                        title={tradeLabels[j.trade]}
-                      />
-                    </td>
-                    <td className="px-2 py-3">
-                      <Link href={`/jobs/${j.id}`} className="font-medium text-[#16233A] group-hover:text-[#D9480F]">
+                  <li key={j.id} className="flex gap-3 px-4 py-3">
+                    <span
+                      className="mt-0.5 block h-auto w-1 shrink-0 self-stretch rounded-full"
+                      style={{ backgroundColor: tradeAccent[j.trade] }}
+                    />
+                    <Link href={`/jobs/${j.id}`} className="min-w-0 flex-1">
+                      <p className="font-medium text-[#16233A]">
                         {j.jobNumber} · {j.title}
-                      </Link>
-                      <p className="text-xs text-[#5B6B82]">{j.property.addressLine1}</p>
-                    </td>
-                    <td className="px-2 py-3 text-[#5B6B82]">{j.client.name}</td>
-                    <td className="px-2 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#3A4A5F]">
-                        <span
-                          className="inline-block h-1.5 w-1.5 rounded-full"
-                          style={{ backgroundColor: tradeAccent[j.trade] }}
-                        />
-                        {tradeLabels[j.trade]}
-                      </span>
-                    </td>
-                    <td className="px-2 py-3">
-                      {j.property.serviceArea ? (
-                        <Badge className={areaColor(j.property.serviceArea.name)}>
-                          {j.property.serviceArea.name}
+                      </p>
+                      <p className="truncate text-xs text-[#5B6B82]">{j.client.name}</p>
+                      <p className="truncate text-xs text-[#8A93A3]">{j.property.addressLine1}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#3A4A5F]">
+                          <span
+                            className="inline-block h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: tradeAccent[j.trade] }}
+                          />
+                          {tradeLabels[j.trade]}
+                        </span>
+                        {j.property.serviceArea && (
+                          <Badge className={areaColor(j.property.serviceArea.name)}>
+                            {j.property.serviceArea.name}
+                          </Badge>
+                        )}
+                        <Badge className={jobStatusColors[j.status]}>
+                          <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current" />
+                          {jobStatusLabels[j.status]}
                         </Badge>
-                      ) : (
-                        <span className="text-xs text-[#8A93A3]">—</span>
-                      )}
-                    </td>
-                    <td className="tabular-nums px-2 py-3 font-mono text-xs text-[#5B6B82]">
-                      {j.scheduledStart ? format(j.scheduledStart, "MMM d, yyyy") : "—"}
-                    </td>
-                    <td className="px-2 py-3">
-                      <Badge className={jobStatusColors[j.status]}>
-                        <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current" />
-                        {jobStatusLabels[j.status]}
-                      </Badge>
-                    </td>
-                    <td className="py-3 pl-2 pr-5 text-right">
-                      <ChevronRight
-                        size={16}
-                        className="inline-block text-[#C7C0B0] opacity-0 transition group-hover:opacity-100"
-                      />
-                    </td>
-                  </tr>
+                        {j.scheduledStart && (
+                          <span className="tabular-nums ml-auto font-mono text-xs text-[#5B6B82]">
+                            {format(j.scheduledStart, "MMM d")}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+
+              {/* Full table from `lg` up. */}
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[#EFEAE0] bg-[#FAF9F5] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
+                    <tr>
+                      <th className="py-2 pl-5 pr-2 font-medium"></th>
+                      <th className="px-2 py-2 font-medium">Job</th>
+                      <th className="px-2 py-2 font-medium">Client</th>
+                      <th className="px-2 py-2 font-medium">Trade</th>
+                      <th className="px-2 py-2 font-medium">Area</th>
+                      <th className="px-2 py-2 font-medium">Scheduled</th>
+                      <th className="px-2 py-2 font-medium">Status</th>
+                      <th className="py-2 pl-2 pr-5 font-medium"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EFEAE0]">
+                    {jobs.map((j) => (
+                      <tr key={j.id} className="group transition hover:bg-[#FAF7F1]">
+                        <td className="py-3 pl-5 pr-2">
+                          <span
+                            className="block h-8 w-1 rounded-full"
+                            style={{ backgroundColor: tradeAccent[j.trade] }}
+                            title={tradeLabels[j.trade]}
+                          />
+                        </td>
+                        <td className="px-2 py-3">
+                          <Link href={`/jobs/${j.id}`} className="font-medium text-[#16233A] group-hover:text-[#D9480F]">
+                            {j.jobNumber} · {j.title}
+                          </Link>
+                          <p className="text-xs text-[#5B6B82]">{j.property.addressLine1}</p>
+                        </td>
+                        <td className="px-2 py-3 text-[#5B6B82]">{j.client.name}</td>
+                        <td className="px-2 py-3">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#3A4A5F]">
+                            <span
+                              className="inline-block h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: tradeAccent[j.trade] }}
+                            />
+                            {tradeLabels[j.trade]}
+                          </span>
+                        </td>
+                        <td className="px-2 py-3">
+                          {j.property.serviceArea ? (
+                            <Badge className={areaColor(j.property.serviceArea.name)}>
+                              {j.property.serviceArea.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-[#8A93A3]">—</span>
+                          )}
+                        </td>
+                        <td className="tabular-nums px-2 py-3 font-mono text-xs text-[#5B6B82]">
+                          {j.scheduledStart ? format(j.scheduledStart, "MMM d, yyyy") : "—"}
+                        </td>
+                        <td className="px-2 py-3">
+                          <Badge className={jobStatusColors[j.status]}>
+                            <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current" />
+                            {jobStatusLabels[j.status]}
+                          </Badge>
+                        </td>
+                        <td className="py-3 pl-2 pr-5 text-right">
+                          <ChevronRight
+                            size={16}
+                            className="inline-block text-[#C7C0B0] opacity-0 transition group-hover:opacity-100"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardBody>
       </Card>
