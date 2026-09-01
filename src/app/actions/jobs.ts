@@ -167,7 +167,6 @@ export async function removeAssignment(jobId: string, assignmentId: string) {
 
 export async function updateJobDescription(jobId: string, formData: FormData) {
   const user = await requireUser();
-  if (user.role === "SUBCONTRACTOR") throw new Error("Only office staff can edit the job description.");
   await requireJobAccess(user, jobId);
   const description = String(formData.get("description") ?? "").trim();
 
@@ -181,7 +180,6 @@ export async function updateJobDescription(jobId: string, formData: FormData) {
 
 export async function updateJobNotes(jobId: string, formData: FormData) {
   const user = await requireUser();
-  if (user.role === "SUBCONTRACTOR") throw new Error("Only office staff can edit job notes.");
   await requireJobAccess(user, jobId);
   const notes = String(formData.get("notes") ?? "").trim();
 

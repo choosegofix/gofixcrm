@@ -271,21 +271,15 @@ export default async function JobDetailPage({
           <Card>
             <CardHeader title="Description" />
             <CardBody>
-              {user.role === "SUBCONTRACTOR" ? (
-                <p className="whitespace-pre-wrap text-sm text-[#3A4A5F]">
-                  {job.description || <span className="text-[#8A93A3]">No description yet.</span>}
-                </p>
-              ) : (
-                <form action={updateDescriptionForJob} className="space-y-2">
-                  <Textarea
-                    name="description"
-                    rows={4}
-                    defaultValue={job.description ?? ""}
-                    placeholder="What's the job? Symptoms, scope, anything the crew needs to know before arriving…"
-                  />
-                  <Button type="submit" size="sm">Save description</Button>
-                </form>
-              )}
+              <form action={updateDescriptionForJob} className="space-y-2">
+                <Textarea
+                  name="description"
+                  rows={4}
+                  defaultValue={job.description ?? ""}
+                  placeholder="What's the job? Symptoms, scope, anything the crew needs to know before arriving…"
+                />
+                <Button type="submit" size="sm">Save description</Button>
+              </form>
             </CardBody>
           </Card>
 
@@ -421,21 +415,15 @@ export default async function JobDetailPage({
           <Card>
             <CardHeader title="Job notes" subtitle="Internal — not visible to clients" />
             <CardBody>
-              {user.role === "SUBCONTRACTOR" ? (
-                <p className="whitespace-pre-wrap text-sm text-[#3A4A5F]">
-                  {job.notes || <span className="text-[#8A93A3]">No notes yet.</span>}
-                </p>
-              ) : (
-                <form action={updateNotesForJob} className="space-y-2">
-                  <Textarea
-                    name="notes"
-                    rows={6}
-                    defaultValue={job.notes ?? ""}
-                    placeholder="Gate codes, parking instructions, anything the crew or office should know…"
-                  />
-                  <Button type="submit" size="sm">Save notes</Button>
-                </form>
-              )}
+              <form action={updateNotesForJob} className="space-y-2">
+                <Textarea
+                  name="notes"
+                  rows={6}
+                  defaultValue={job.notes ?? ""}
+                  placeholder="Gate codes, parking instructions, anything the crew or office should know…"
+                />
+                <Button type="submit" size="sm">Save notes</Button>
+              </form>
             </CardBody>
           </Card>
         </div>
