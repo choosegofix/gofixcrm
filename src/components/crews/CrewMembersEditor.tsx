@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
+import { CrewMemberNameInput } from "@/components/crews/CrewMemberNameInput";
 
 let nextId = 0;
 
@@ -12,19 +12,15 @@ export function CrewMembersEditor({ existingUserNames }: { existingUserNames: st
   return (
     <div className="space-y-2">
       <input type="hidden" name="memberCount" value={rows.length} />
-      <datalist id="crew-member-names">
-        {existingUserNames.map((n) => (
-          <option key={n} value={n} />
-        ))}
-      </datalist>
       {rows.map((row, i) => (
         <div key={row.key} className="flex items-center gap-2">
-          <Input
-            name={`member_${i}`}
-            list="crew-member-names"
-            placeholder="Type a name — existing staff or a new one"
-            className="flex-1"
-          />
+          <div className="flex-1">
+            <CrewMemberNameInput
+              name={`member_${i}`}
+              existingNames={existingUserNames}
+              placeholder="Type a name — existing staff or a new one"
+            />
+          </div>
           <button
             type="button"
             onClick={() => setRows((r) => r.filter((x) => x.key !== row.key))}

@@ -5,11 +5,12 @@ import { requireOfficeOrAdmin } from "@/lib/session";
 import Link from "next/link";
 import { addCrewMember, updateCrewNotes } from "@/app/actions/crews";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { FormField, Input, Textarea } from "@/components/ui/Field";
+import { FormField, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { crewTypeLabels, tradeColors, tradeLabels } from "@/lib/labels";
 import { areaColor } from "@/lib/serviceArea";
+import { CrewMemberNameInput } from "@/components/crews/CrewMemberNameInput";
 
 export default async function CrewDetailPage({
   params,
@@ -80,12 +81,12 @@ export default async function CrewDetailPage({
                   htmlFor="memberName"
                   hint="Type an existing staff member's name to link their account, or a new name to add them without a CRM login."
                 >
-                  <datalist id="crew-member-names">
-                    {availableUsers.map((u) => (
-                      <option key={u.id} value={u.name} />
-                    ))}
-                  </datalist>
-                  <Input id="memberName" name="memberName" list="crew-member-names" required />
+                  <CrewMemberNameInput
+                    id="memberName"
+                    name="memberName"
+                    existingNames={availableUsers.map((u) => u.name)}
+                    required
+                  />
                 </FormField>
               </div>
               <Button type="submit" size="sm">
