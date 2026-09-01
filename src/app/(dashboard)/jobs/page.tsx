@@ -14,6 +14,7 @@ import {
   jobStatusColors,
   jobStatusLabels,
   jobStatusOrder,
+  tradeAccent,
   tradeLabels,
 } from "@/lib/labels";
 import { format } from "date-fns";
@@ -54,12 +55,6 @@ export default async function JobsPage({
     const qs = params.toString();
     return qs ? `/jobs?${qs}` : "/jobs";
   }
-
-  const tradeAccent: Record<Trade, string> = {
-    HVAC: "#2E4A63",
-    ELECTRICAL: "#8A5A19",
-    PLUMBING: "#1F5C51",
-  };
 
   return (
     <div className="space-y-6">

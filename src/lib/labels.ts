@@ -24,10 +24,19 @@ export const tradeLabels: Record<Trade, string> = {
   PLUMBING: "Plumbing",
 };
 
+// Single source of truth for trade color-coding — badges (tradeColors)
+// and solid markers/dots (tradeAccent) both derive from the same hue per
+// trade so the map, job lists, and badges all agree with each other.
+export const tradeAccent: Record<Trade, string> = {
+  PLUMBING: "#1D4ED8", // blue
+  ELECTRICAL: "#CA8A04", // yellow
+  HVAC: "#15803D", // green
+};
+
 export const tradeColors: Record<Trade, string> = {
-  HVAC: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
-  ELECTRICAL: "bg-[#FBEEDC] text-[#8A5A19] border-[#E9CBA0]",
-  PLUMBING: "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  HVAC: "bg-[#DFF0E4] text-[#15803D] border-[#BEDCC8]",
+  ELECTRICAL: "bg-[#FBF1D6] text-[#CA8A04] border-[#EDD999]",
+  PLUMBING: "bg-[#E3EAFB] text-[#1D4ED8] border-[#C2D3F5]",
 };
 
 export const jobStatusLabels: Record<JobStatus, string> = {

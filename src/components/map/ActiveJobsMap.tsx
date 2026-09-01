@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
+import { tradeAccent } from "@/lib/labels";
 
 export type MapJob = {
   id: string;
@@ -13,12 +14,6 @@ export type MapJob = {
   status: string;
   lat: number;
   lng: number;
-};
-
-const TRADE_COLOR: Record<string, string> = {
-  HVAC: "#2E4A63",
-  ELECTRICAL: "#8A5A19",
-  PLUMBING: "#1F5C51",
 };
 
 // GTA-ish default center (downtown Toronto) so the map has somewhere to
@@ -49,12 +44,12 @@ export function ActiveJobsMap({ jobs }: { jobs: MapJob[] }) {
       const bounds: [number, number][] = [];
 
       for (const job of jobs) {
-        const color = TRADE_COLOR[job.trade] ?? "#5B6B82";
+        const color = (tradeAccent as Record<string, string>)[job.trade] ?? "#5B6B82";
         const icon = L.divIcon({
           className: "",
-          html: `<div style="background:${color};width:14px;height:14px;border-radius:9999px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
+          html: `<div style="background:${color};width:22px;height:22px;border-radius:9999px;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.45)"></div>`,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
         });
 
         const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}`;
