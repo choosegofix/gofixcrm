@@ -3,7 +3,7 @@ import { getCompany } from "@/lib/company";
 import { requireOfficeOrAdmin } from "@/lib/session";
 import { createCrew } from "@/app/actions/crews";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { FormField, Input, Select } from "@/components/ui/Field";
+import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 
 export default async function NewCrewPage() {
@@ -74,6 +74,9 @@ export default async function NewCrewPage() {
                 <Input id="contactPhone" name="contactPhone" type="tel" />
               </FormField>
             </div>
+            <FormField label="Notes" htmlFor="notes" hint="Reliability, preferences, anything worth remembering — internal only">
+              <Textarea id="notes" name="notes" rows={3} />
+            </FormField>
             <Button type="submit">Save crew</Button>
           </CardBody>
         </Card>

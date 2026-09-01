@@ -6,7 +6,7 @@ import { createGeneralContact } from "@/app/actions/contacts";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FormField, Input, Select } from "@/components/ui/Field";
+import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import Link from "next/link";
@@ -199,6 +199,9 @@ export default async function ContactsPage({
                   <option value="PHONE">Phone</option>
                   <option value="ANY">Any</option>
                 </Select>
+              </FormField>
+              <FormField label="Notes" htmlFor="notes" hint="Internal only">
+                <Textarea id="notes" name="notes" rows={3} />
               </FormField>
               <Button type="submit" className="w-full">
                 Add contact

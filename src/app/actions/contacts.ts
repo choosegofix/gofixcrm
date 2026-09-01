@@ -22,6 +22,7 @@ export async function createGeneralContact(formData: FormData) {
       email: String(formData.get("email") ?? "") || null,
       phone: String(formData.get("phone") ?? "") || null,
       commPreference: (String(formData.get("commPreference") ?? "EMAIL") as CommPreference) || "EMAIL",
+      notes: String(formData.get("notes") ?? "").trim() || null,
     },
   });
 

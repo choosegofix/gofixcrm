@@ -33,6 +33,7 @@ export async function createCrew(formData: FormData) {
 
   const contactEmail = String(formData.get("contactEmail") ?? "") || null;
   const contactPhone = String(formData.get("contactPhone") ?? "") || null;
+  const notes = String(formData.get("notes") ?? "").trim() || null;
 
   const crew = await prisma.crew.create({
     data: {
@@ -42,6 +43,7 @@ export async function createCrew(formData: FormData) {
       trades,
       contactEmail,
       contactPhone,
+      notes,
       serviceAreas: {
         create: allAreaIds.map((serviceAreaId) => ({ serviceAreaId })),
       },
