@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { LineItemsEditor } from "@/components/quotes/LineItemsEditor";
+import { PersonNameInput } from "@/components/ui/PersonNameInput";
 
 export default async function NewInvoicePage({
   searchParams,
@@ -16,11 +17,19 @@ export default async function NewInvoicePage({
   const company = await getCompany();
   const { jobId } = await searchParams;
 
-  const jobs = await prisma.job.findMany({
-    where: { companyId: company.id, status: { not: "CANCELLED" } },
-    orderBy: { createdAt: "desc" },
-    include: { client: true },
-  });
+  const [jobs, users, contacts] = await Promise.all([
+    prisma.job.findMany({
+      where: { companyId: company.id, status: { not: "CANCELLED" } },
+      orderBy: { createdAt: "desc" },
+      include: { client: true },
+    }),
+    prisma.user.findMany({ where: { companyId: company.id, isActive: true }, select: { name: true } }),
+    prisma.contact.findMany({ where: { companyId: company.id }, select: { firstName: true, lastName: true } }),
+  ]);
+  const suggestionNames = [
+    ...users.map((u) => u.name),
+    ...contacts.map((c) => `${c.firstName} ${c.lastName}`.trim()),
+  ];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -43,6 +52,29 @@ export default async function NewInvoicePage({
             </FormField>
             <FormField label="Due date" htmlFor="dueDate" required>
               <Input id="dueDate" name="dueDate" type="date" required />
+            </FormField>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Billing contact"
+            subtitle="Optional — leave blank to bill the client's usual contact"
+          />
+          <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <FormField label="Name" htmlFor="billingContactName">
+              <PersonNameInput
+                id="billingContactName"
+                name="billingContactName"
+                existingNames={suggestionNames}
+                placeholder="Type an existing or new contact"
+              />
+            </FormField>
+            <FormField label="Email" htmlFor="billingContactEmail" hint="Only used if this is a new contact">
+              <Input id="billingContactEmail" name="billingContactEmail" type="email" />
+            </FormField>
+            <FormField label="Phone" htmlFor="billingContactPhone" hint="Only used if this is a new contact">
+              <Input id="billingContactPhone" name="billingContactPhone" type="tel" />
             </FormField>
           </CardBody>
         </Card>

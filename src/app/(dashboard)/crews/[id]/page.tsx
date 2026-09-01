@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { crewTypeLabels, tradeColors, tradeLabels } from "@/lib/labels";
 import { areaColor } from "@/lib/serviceArea";
-import { CrewMemberNameInput } from "@/components/crews/CrewMemberNameInput";
+import { PersonNameInput } from "@/components/ui/PersonNameInput";
 
 export default async function CrewDetailPage({
   params,
@@ -24,7 +24,7 @@ export default async function CrewDetailPage({
   const crew = await prisma.crew.findUnique({
     where: { id },
     include: {
-      members: { include: { user: true } },
+      members: { include: { user: { include: { contact: true } }, contact: true } },
       jobAssignments: { include: { job: { include: { client: true } } } },
       serviceAreas: { include: { serviceArea: true } },
     },
@@ -32,11 +32,22 @@ export default async function CrewDetailPage({
 
   if (!crew) notFound();
 
-  const memberIds = new Set(crew.members.map((m) => m.userId).filter((id): id is string => !!id));
-  const availableUsers = await prisma.user.findMany({
-    where: { companyId: company.id, isActive: true, id: { notIn: [...memberIds] } },
-    orderBy: { name: "asc" },
-  });
+  const memberUserIds = new Set(crew.members.map((m) => m.userId).filter((id): id is string => !!id));
+  const memberContactIds = new Set(crew.members.map((m) => m.contactId).filter((id): id is string => !!id));
+  const [availableUsers, availableContacts] = await Promise.all([
+    prisma.user.findMany({
+      where: { companyId: company.id, isActive: true, id: { notIn: [...memberUserIds] } },
+      orderBy: { name: "asc" },
+    }),
+    prisma.contact.findMany({
+      where: { companyId: company.id, userId: null, id: { notIn: [...memberContactIds] } },
+      orderBy: { firstName: "asc" },
+    }),
+  ]);
+  const suggestionNames = [
+    ...availableUsers.map((u) => u.name),
+    ...availableContacts.map((c) => `${c.firstName} ${c.lastName}`.trim()),
+  ];
 
   const addMemberToCrew = addCrewMember.bind(null, crew.id);
   const updateNotesForCrew = updateCrewNotes.bind(null, crew.id);
@@ -66,12 +77,24 @@ export default async function CrewDetailPage({
           <CardBody className="space-y-4">
             {crew.members.length > 0 && (
               <ul className="space-y-2">
-                {crew.members.map((m) => (
-                  <li key={m.id} className="rounded-md border border-[#EFEAE0] px-3 py-2 text-sm">
-                    <p className="font-medium text-[#16233A]">{m.user?.name ?? m.name}</p>
-                    <p className="text-xs text-[#5B6B82]">{m.user?.email ?? "No CRM login"}</p>
-                  </li>
-                ))}
+                {crew.members.map((m) => {
+                  const contact = m.user?.contact ?? m.contact;
+                  const name = m.user?.name ?? (m.contact ? `${m.contact.firstName} ${m.contact.lastName}` : "Unknown");
+                  const email = m.user?.email ?? m.contact?.email;
+                  return (
+                    <li key={m.id} className="flex items-center justify-between rounded-md border border-[#EFEAE0] px-3 py-2 text-sm">
+                      <div>
+                        <p className="font-medium text-[#16233A]">{name}</p>
+                        <p className="text-xs text-[#5B6B82]">{email ?? "No CRM login"}</p>
+                      </div>
+                      {contact && (
+                        <Link href={`/contacts/${contact.id}`} className="text-xs font-medium text-[#D9480F] hover:underline">
+                          Contact card →
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
             <form action={addMemberToCrew} className="flex items-end gap-2">
@@ -81,10 +104,10 @@ export default async function CrewDetailPage({
                   htmlFor="memberName"
                   hint="Type an existing staff member's name to link their account, or a new name to add them without a CRM login."
                 >
-                  <CrewMemberNameInput
+                  <PersonNameInput
                     id="memberName"
                     name="memberName"
-                    existingNames={availableUsers.map((u) => u.name)}
+                    existingNames={suggestionNames}
                     required
                   />
                 </FormField>

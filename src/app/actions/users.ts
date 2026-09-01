@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireAdmin } from "@/lib/session";
+import { ensureContactForUser } from "@/lib/people";
 import type { Role } from "@prisma/client";
 
 export async function createStaffUser(formData: FormData) {
@@ -22,7 +23,7 @@ export async function createStaffUser(formData: FormData) {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       companyId: company.id,
       name,
@@ -33,7 +34,10 @@ export async function createStaffUser(formData: FormData) {
     },
   });
 
+  await ensureContactForUser(user.id);
+
   revalidatePath("/settings/users");
+  revalidatePath("/contacts");
 }
 
 export async function deactivateUser(userId: string) {

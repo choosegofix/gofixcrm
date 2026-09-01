@@ -11,7 +11,7 @@ export default async function NewCrewPage() {
   await requireOfficeOrAdmin();
   const company = await getCompany();
 
-  const [areas, users] = await Promise.all([
+  const [areas, users, contacts] = await Promise.all([
     prisma.serviceArea.findMany({
       where: { companyId: company.id },
       orderBy: { name: "asc" },
@@ -21,7 +21,16 @@ export default async function NewCrewPage() {
       orderBy: { name: "asc" },
       select: { name: true },
     }),
+    prisma.contact.findMany({
+      where: { companyId: company.id, userId: null },
+      orderBy: { firstName: "asc" },
+      select: { firstName: true, lastName: true },
+    }),
   ]);
+  const suggestionNames = [
+    ...users.map((u) => u.name),
+    ...contacts.map((c) => `${c.firstName} ${c.lastName}`.trim()),
+  ];
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -90,7 +99,7 @@ export default async function NewCrewPage() {
               htmlFor="member_0"
               hint="Type an existing staff member's name to link their account, or a new name to add them without a CRM login."
             >
-              <CrewMembersEditor existingUserNames={users.map((u) => u.name)} />
+              <CrewMembersEditor existingUserNames={suggestionNames} />
             </FormField>
             <Button type="submit">Save crew</Button>
           </CardBody>

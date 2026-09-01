@@ -3,6 +3,25 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Every staff user gets a linked contact card too -- see resolvePersonByName
+// / ensureContactForUser in src/lib/people.ts for the same rule at runtime.
+async function ensureStaffContact(user: { id: string; companyId: string; name: string; email: string; phone: string | null }) {
+  const [firstName, ...rest] = user.name.split(" ");
+  await prisma.contact.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: {
+      companyId: user.companyId,
+      userId: user.id,
+      firstName,
+      lastName: rest.join(" "),
+      email: user.email,
+      phone: user.phone,
+      title: "Staff",
+    },
+  });
+}
+
 async function main() {
   const passwordHash = await bcrypt.hash("password123", 10);
 
@@ -67,6 +86,10 @@ async function main() {
       role: "SUBCONTRACTOR",
     },
   });
+
+  for (const user of [admin, dispatcher, tech, subcontractor]) {
+    await ensureStaffContact(user);
+  }
 
   const areaNames = ["Toronto", "North York", "Scarborough", "Mississauga", "Vaughan", "Markham"];
   const areas = Object.fromEntries(

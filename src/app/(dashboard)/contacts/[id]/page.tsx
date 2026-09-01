@@ -10,10 +10,18 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { commPreferenceLabels } from "@/lib/labels";
 
-function contactType(c: { clientId: string | null; leadId: string | null; crewId: string | null }) {
+function contactType(c: {
+  clientId: string | null;
+  leadId: string | null;
+  crewId: string | null;
+  userId: string | null;
+  crewMember: { crewId: string } | null;
+}) {
   if (c.leadId) return "Lead";
   if (c.crewId) return "Crew";
   if (c.clientId) return "Client";
+  if (c.userId) return "Staff";
+  if (c.crewMember) return "Crew member";
   return "General";
 }
 
@@ -21,6 +29,8 @@ const TYPE_BADGE: Record<string, string> = {
   Client: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
   Lead: "bg-[#FBEEDC] text-[#8A5A19] border-[#E9CBA0]",
   Crew: "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  "Crew member": "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  Staff: "bg-[#EFE3ED] text-[#6B3A5E] border-[#D9C0D3]",
   General: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
 };
 
@@ -34,7 +44,7 @@ export default async function ContactDetailPage({
 
   const contact = await prisma.contact.findUnique({
     where: { id },
-    include: { client: true, lead: true, crew: true },
+    include: { client: true, lead: true, crew: true, user: true, crewMember: { include: { crew: true } } },
   });
 
   if (!contact) notFound();
@@ -47,7 +57,11 @@ export default async function ContactDetailPage({
         ? `/crews/${contact.crewId}`
         : type === "Lead"
           ? "/leads"
-          : null;
+          : type === "Staff"
+            ? "/settings/users"
+            : type === "Crew member" && contact.crewMember
+              ? `/crews/${contact.crewMember.crewId}`
+              : null;
   const sourceLabel =
     type === "Client" && contact.client
       ? contact.client.name
@@ -55,7 +69,11 @@ export default async function ContactDetailPage({
         ? contact.crew.name
         : type === "Lead"
           ? "Lead"
-          : "General contact";
+          : type === "Staff" && contact.user
+            ? contact.user.role
+            : type === "Crew member" && contact.crewMember
+              ? contact.crewMember.crew.name
+              : "General contact";
 
   const updateNotesForContact = updateContactNotes.bind(null, contact.id);
 

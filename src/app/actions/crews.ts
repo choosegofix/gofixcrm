@@ -6,29 +6,28 @@ import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireOfficeOrAdmin } from "@/lib/session";
 import { findOrCreateServiceArea } from "@/lib/serviceArea";
+import { resolvePersonByName } from "@/lib/people";
 import type { CrewType, Trade } from "@prisma/client";
 
-// Shared by createCrew and addCrewMember: a typed name either matches an
-// existing active user (linked properly, so they keep their one real
-// account) or becomes a name-only member with no CRM login -- for
-// helpers/laborers who just need to show up on the schedule.
+// Shared by createCrew and addCrewMember: a typed name resolves to an
+// existing staff user, an existing contact, or a brand-new contact --
+// every crew member ends up with a contact card either way.
 async function addMemberByName(crewId: string, companyId: string, typedName: string) {
   const name = typedName.trim();
   if (!name) return;
 
-  const existingMembers = await prisma.crewMember.findMany({ where: { crewId }, include: { user: true } });
-  const alreadyMember = existingMembers.some(
-    (m) => (m.user?.name ?? m.name ?? "").toLowerCase() === name.toLowerCase()
-  );
+  const existingMembers = await prisma.crewMember.findMany({
+    where: { crewId },
+    include: { user: true, contact: true },
+  });
+  const alreadyMember = existingMembers.some((m) => {
+    const existingName = m.user?.name ?? (m.contact ? `${m.contact.firstName} ${m.contact.lastName}` : "");
+    return existingName.trim().toLowerCase() === name.toLowerCase();
+  });
   if (alreadyMember) return;
 
-  const matchedUser = await prisma.user.findFirst({
-    where: { companyId, isActive: true, name: { equals: name, mode: "insensitive" } },
-  });
-
-  await prisma.crewMember.create({
-    data: matchedUser ? { crewId, userId: matchedUser.id } : { crewId, name },
-  });
+  const person = await resolvePersonByName(companyId, name);
+  await prisma.crewMember.create({ data: { crewId, ...person } });
 }
 
 export async function createCrew(formData: FormData) {

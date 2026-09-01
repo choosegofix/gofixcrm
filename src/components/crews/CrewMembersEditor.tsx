@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { CrewMemberNameInput } from "@/components/crews/CrewMemberNameInput";
+import { PersonNameInput } from "@/components/ui/PersonNameInput";
 
 let nextId = 0;
 
@@ -15,7 +15,7 @@ export function CrewMembersEditor({ existingUserNames }: { existingUserNames: st
       {rows.map((row, i) => (
         <div key={row.key} className="flex items-center gap-2">
           <div className="flex-1">
-            <CrewMemberNameInput
+            <PersonNameInput
               name={`member_${i}`}
               existingNames={existingUserNames}
               placeholder="Type a name — existing staff or a new one"

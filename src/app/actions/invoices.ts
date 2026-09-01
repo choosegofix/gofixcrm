@@ -9,6 +9,7 @@ import { requireUser } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { formatRecordNumber } from "@/lib/numbers";
 import { TAX_RATE } from "@/lib/currency";
+import { resolvePersonContactId } from "@/lib/people";
 import type { PaymentMethod } from "@prisma/client";
 
 function parseLineItems(formData: FormData) {
@@ -45,11 +46,20 @@ export async function createInvoice(formData: FormData) {
 
   const invoiceCount = await prisma.invoice.count({ where: { companyId: company.id } });
 
+  const billingContactName = String(formData.get("billingContactName") ?? "").trim();
+  const billingContactId = billingContactName
+    ? await resolvePersonContactId(company.id, billingContactName, {
+        email: String(formData.get("billingContactEmail") ?? "") || null,
+        phone: String(formData.get("billingContactPhone") ?? "") || null,
+      })
+    : null;
+
   const invoice = await prisma.invoice.create({
     data: {
       companyId: company.id,
       clientId: job.clientId,
       jobId: job.id,
+      billingContactId,
       invoiceNumber: formatRecordNumber("INV", invoiceCount),
       status: "SENT",
       issueDate: new Date(),

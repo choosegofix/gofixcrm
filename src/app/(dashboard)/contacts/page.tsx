@@ -16,6 +16,8 @@ const TYPE_OPTIONS = [
   { value: "CLIENT", label: "Client" },
   { value: "LEAD", label: "Lead" },
   { value: "CREW", label: "Crew" },
+  { value: "CREW_MEMBER", label: "Crew member" },
+  { value: "STAFF", label: "Staff" },
   { value: "GENERAL", label: "General" },
 ];
 
@@ -23,13 +25,23 @@ const TYPE_BADGE: Record<string, string> = {
   Client: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
   Lead: "bg-[#FBEEDC] text-[#8A5A19] border-[#E9CBA0]",
   Crew: "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  "Crew member": "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  Staff: "bg-[#EFE3ED] text-[#6B3A5E] border-[#D9C0D3]",
   General: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
 };
 
-function contactType(c: { clientId: string | null; leadId: string | null; crewId: string | null }) {
+function contactType(c: {
+  clientId: string | null;
+  leadId: string | null;
+  crewId: string | null;
+  userId: string | null;
+  crewMember: { crewId: string } | null;
+}) {
   if (c.leadId) return "Lead";
   if (c.crewId) return "Crew";
   if (c.clientId) return "Client";
+  if (c.userId) return "Staff";
+  if (c.crewMember) return "Crew member";
   return "General";
 }
 
@@ -49,9 +61,13 @@ export default async function ContactsPage({
         ? { leadId: { not: null } }
         : type === "CREW"
           ? { crewId: { not: null } }
-          : type === "GENERAL"
-            ? { clientId: null, leadId: null, crewId: null }
-            : {};
+          : type === "STAFF"
+            ? { userId: { not: null } }
+            : type === "CREW_MEMBER"
+              ? { crewMember: { isNot: null } }
+              : type === "GENERAL"
+                ? { clientId: null, leadId: null, crewId: null, userId: null, crewMember: null }
+                : {};
 
   const contacts = await prisma.contact.findMany({
     where: {
@@ -69,7 +85,7 @@ export default async function ContactsPage({
         : {}),
     },
     orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
-    include: { client: true, lead: true, crew: true },
+    include: { client: true, lead: true, crew: true, user: true, crewMember: { include: { crew: true } } },
   });
 
   return (
@@ -78,7 +94,7 @@ export default async function ContactsPage({
         <div>
           <h1 className="text-xl font-semibold text-[#16233A]">Contacts</h1>
           <p className="text-sm text-[#5B6B82]">
-            Every client, lead, and crew contact in one place — {contacts.length} shown
+            Every person in the CRM in one place — {contacts.length} shown
           </p>
         </div>
       </div>
@@ -104,7 +120,7 @@ export default async function ContactsPage({
                 <EmptyState
                   icon={Users}
                   title="No contacts match"
-                  description="Try clearing the search or type filter. New leads and crews are added here automatically."
+                  description="Try clearing the search or type filter. Everyone typed into the CRM — leads, crews, staff, billing contacts — shows up here automatically."
                 />
               ) : (
                 <div className="overflow-x-auto">
@@ -126,7 +142,11 @@ export default async function ContactsPage({
                             ? "Lead"
                             : type === "Crew" && c.crew
                               ? c.crew.name
-                              : "General";
+                              : type === "Staff" && c.user
+                                ? c.user.role
+                                : type === "Crew member" && c.crewMember
+                                  ? c.crewMember.crew.name
+                                  : "General";
                       const sourceHref =
                         type === "Client" && c.clientId
                           ? `/clients/${c.clientId}`
@@ -134,7 +154,11 @@ export default async function ContactsPage({
                             ? `/crews/${c.crewId}`
                             : type === "Lead"
                               ? "/leads"
-                              : null;
+                              : type === "Staff"
+                                ? "/settings/users"
+                                : type === "Crew member" && c.crewMember
+                                  ? `/crews/${c.crewMember.crewId}`
+                                  : null;
                       return (
                         <tr key={c.id} className="hover:bg-[#FAF7F1]">
                           <td className="px-5 py-3">

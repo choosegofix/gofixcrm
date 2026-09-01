@@ -22,6 +22,7 @@ export default async function InvoiceDetailPage({
     where: { id },
     include: {
       client: { include: { contacts: { orderBy: [{ isBilling: "desc" }, { isPrimary: "desc" }] } } },
+      billingContact: true,
       job: true,
       lineItems: { orderBy: { sortOrder: "asc" } },
       payments: { orderBy: { paidAt: "desc" } },
@@ -31,7 +32,7 @@ export default async function InvoiceDetailPage({
   if (!invoice) notFound();
 
   const balance = Number(invoice.total) - Number(invoice.amountPaid);
-  const billingContact = invoice.client.contacts[0];
+  const billingContact = invoice.billingContact ?? invoice.client.contacts[0];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -46,9 +47,11 @@ export default async function InvoiceDetailPage({
                 {invoice.job.jobNumber} · {invoice.job.title}
               </Link>
             )}
-            {billingContact && (billingContact.email || billingContact.phone) && (
+            {billingContact && (
               <span className="block text-[#5B6B82]">
-                {[billingContact.email, billingContact.phone].filter(Boolean).join(" · ")}
+                Billing to: {billingContact.firstName} {billingContact.lastName}
+                {(billingContact.email || billingContact.phone) &&
+                  ` — ${[billingContact.email, billingContact.phone].filter(Boolean).join(" · ")}`}
               </span>
             )}
           </>

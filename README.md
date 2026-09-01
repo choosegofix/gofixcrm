@@ -70,6 +70,17 @@ just the plan below). Right now:
   name to add them as a name-only member (shows up on the crew and the
   schedule, no email/password needed). Renamed "Checklist Templates" to
   **Checklists/SOP** in the sidebar.
+- ✅ **Everyone is a contact**: any person typed into the CRM — a crew
+  member, an invoice's billing contact, a new staff account in Team &
+  Settings — automatically gets (or is linked to) a card in the Contacts
+  directory with their info, instead of each feature keeping its own
+  separate, disconnected list of names. Typing an existing person's name
+  anywhere reuses their one contact card rather than creating a duplicate;
+  typing a brand-new name creates one. The same autocomplete-as-you-type
+  field (custom-styled, not a native browser dropdown) is used everywhere
+  this comes up. Invoices also gained an optional "Billing contact" field
+  so you can bill a specific person instead of always the client's default
+  contact.
 - ✅ **Modern UI pass**: refreshed Dashboard (quick-action buttons, accented
   stat cards, hover affordances) and Jobs list (toolbar-style filters,
   trade-colored rows), plus every dropdown in the app was rebuilt as a

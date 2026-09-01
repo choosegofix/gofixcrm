@@ -5,7 +5,11 @@ import { useEffect, useRef, useState } from "react";
 const fieldClass =
   "block w-full rounded-md border border-[#DDD6C7] px-3 py-2 text-sm text-[#16233A] placeholder:text-[#8A93A3] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F]";
 
-export function CrewMemberNameInput({
+// Autocomplete text input for "type an existing person or a new name" --
+// used wherever a person gets added to the CRM (crew members, invoice
+// billing contacts, ...). Custom-rendered rather than a native <datalist>
+// so its suggestion popup matches the site's font/style everywhere.
+export function PersonNameInput({
   name,
   existingNames,
   placeholder,
