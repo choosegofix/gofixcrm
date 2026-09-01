@@ -1,12 +1,14 @@
 export function Card({
   children,
   className = "",
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div className={`rounded-xl border border-[#E3DDD0] bg-white shadow-sm ${className}`}>
+    <div className={`rounded-xl border border-[#E3DDD0] bg-white shadow-sm ${className}`} style={style}>
       {children}
     </div>
   );

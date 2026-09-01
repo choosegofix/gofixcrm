@@ -4,10 +4,22 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
-import { requireUser } from "@/lib/session";
+import { requireOfficeOrAdmin, requireUser } from "@/lib/session";
 import { findOrCreateServiceArea } from "@/lib/serviceArea";
 import { geocodeAddress } from "@/lib/geocode";
 import type { CommPreference } from "@prisma/client";
+
+export async function updateClientNotes(clientId: string, formData: FormData) {
+  await requireOfficeOrAdmin();
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  await prisma.client.update({
+    where: { id: clientId },
+    data: { notes: notes || null },
+  });
+
+  revalidatePath(`/clients/${clientId}`);
+}
 
 export async function createClient(formData: FormData) {
   const user = await requireUser();

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HardHat } from "lucide-react";
+import { HardHat, Users, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireOfficeOrAdmin } from "@/lib/session";
@@ -47,7 +47,7 @@ export default async function CrewsPage({
         <LinkButton href="/crews/new">+ New crew</LinkButton>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E3DDD0] bg-white px-3 py-2.5 shadow-sm">
         <FilterSelect
           paramName="trade"
           label="Trade"
@@ -88,35 +88,47 @@ export default async function CrewsPage({
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {crews.map((c) => (
-            <Link key={c.id} href={`/crews/${c.id}`}>
-              <Card className="h-full transition-shadow hover:shadow-md">
-                <CardBody>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium text-[#16233A]">{c.name}</p>
-                      <p className="text-xs text-[#5B6B82]">{crewTypeLabels[c.type]}</p>
+          {crews.map((c) => {
+            const accent = c.type === "SUBCONTRACTOR" ? "#D9480F" : "#16233A";
+            return (
+              <Link key={c.id} href={`/crews/${c.id}`} className="group">
+                <Card
+                  className="h-full border-l-[3px] transition-shadow hover:shadow-md"
+                  style={{ borderLeftColor: accent }}
+                >
+                  <CardBody>
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-[#16233A] group-hover:text-[#D9480F]">{c.name}</p>
+                        <p className="text-xs text-[#5B6B82]">{crewTypeLabels[c.type]}</p>
+                      </div>
+                      <ChevronRight
+                        size={16}
+                        className="mt-0.5 shrink-0 text-[#C7C0B0] opacity-0 transition group-hover:opacity-100"
+                      />
                     </div>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {c.trades.map((t) => (
-                      <Badge key={t} className={tradeColors[t]}>
-                        {tradeLabels[t]}
-                      </Badge>
-                    ))}
-                    {c.serviceAreas.map((sa) => (
-                      <Badge key={sa.serviceAreaId} className={areaColor(sa.serviceArea.name)}>
-                        {sa.serviceArea.name}
-                      </Badge>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-xs text-[#5B6B82]">
-                    {c.members.length} member{c.members.length === 1 ? "" : "s"}
-                  </p>
-                </CardBody>
-              </Card>
-            </Link>
-          ))}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {c.trades.map((t) => (
+                        <Badge key={t} className={tradeColors[t]}>
+                          {tradeLabels[t]}
+                        </Badge>
+                      ))}
+                      {c.serviceAreas.map((sa) => (
+                        <Badge key={sa.serviceAreaId} className={areaColor(sa.serviceArea.name)}>
+                          {sa.serviceArea.name}
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="mt-3 flex items-center gap-1.5 text-xs text-[#5B6B82]">
+                      <Users size={13} className="text-[#8A93A3]" />
+                      <span className="tabular-nums font-mono">{c.members.length}</span>
+                      {c.members.length === 1 ? "member" : "members"}
+                    </p>
+                  </CardBody>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

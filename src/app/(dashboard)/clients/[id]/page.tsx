@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireOfficeOrAdmin } from "@/lib/session";
-import { addContact, addProperty } from "@/app/actions/clients";
+import { addContact, addProperty, updateClientNotes } from "@/app/actions/clients";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button, LinkButton } from "@/components/ui/Button";
@@ -30,6 +31,7 @@ export default async function ClientDetailPage({
 
   const addContactWithClient = addContact.bind(null, client.id);
   const addPropertyWithClient = addProperty.bind(null, client.id);
+  const updateNotesForClient = updateClientNotes.bind(null, client.id);
 
   return (
     <div className="space-y-6">
@@ -49,8 +51,8 @@ export default async function ClientDetailPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <Card>
             <CardHeader title="Jobs" />
             <CardBody className="p-0">
@@ -59,14 +61,25 @@ export default async function ClientDetailPage({
               ) : (
                 <ul className="divide-y divide-[#EFEAE0]">
                   {client.jobs.map((j) => (
-                    <li key={j.id} className="flex items-center justify-between px-5 py-3">
-                      <div>
-                        <Link href={`/jobs/${j.id}`} className="text-sm font-medium text-[#16233A] hover:text-[#D9480F]">
-                          {j.jobNumber} · {j.title}
-                        </Link>
-                        <p className="text-xs text-[#5B6B82]">{j.property.addressLine1}</p>
-                      </div>
-                      <Badge className={jobStatusColors[j.status]}>{jobStatusLabels[j.status]}</Badge>
+                    <li key={j.id}>
+                      <Link
+                        href={`/jobs/${j.id}`}
+                        className="group flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-[#FAF7F1]"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-[#16233A] group-hover:text-[#D9480F]">
+                            {j.jobNumber} · {j.title}
+                          </p>
+                          <p className="truncate text-xs text-[#5B6B82]">{j.property.addressLine1}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Badge className={jobStatusColors[j.status]}>{jobStatusLabels[j.status]}</Badge>
+                          <ChevronRight
+                            size={15}
+                            className="text-[#C7C0B0] opacity-0 transition group-hover:opacity-100"
+                          />
+                        </div>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -120,7 +133,7 @@ export default async function ClientDetailPage({
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader title="Contacts" />
             <CardBody className="space-y-4">
@@ -185,9 +198,12 @@ export default async function ClientDetailPage({
           </Card>
 
           <Card>
-            <CardHeader title="Notes" />
+            <CardHeader title="Notes" subtitle="Internal — anything worth remembering about this client" />
             <CardBody>
-              <Textarea defaultValue={client.notes ?? ""} rows={4} readOnly className="bg-[#FAF7F1]" />
+              <form action={updateNotesForClient} className="space-y-2">
+                <Textarea name="notes" rows={4} defaultValue={client.notes ?? ""} />
+                <Button type="submit" size="sm">Save notes</Button>
+              </form>
             </CardBody>
           </Card>
         </div>

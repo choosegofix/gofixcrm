@@ -89,6 +89,7 @@ just the plan below). Right now:
   once it's been approved, declined, or expired, and an invoice locks once
   a payment has been recorded against it or it's voided, since editing the
   amount at that point would contradict money already on record.
+  Client notes also became editable in place (were read-only before).
 - ✅ **Modern UI pass**: refreshed Dashboard (quick-action buttons, accented
   stat cards, hover affordances) and Jobs list (toolbar-style filters,
   trade-colored rows), plus every dropdown in the app was rebuilt as a
@@ -99,7 +100,8 @@ just the plan below). Right now:
   Quotes, Invoices, Contacts, Clients, Team & Settings) switches from a
   data table to a stacked card layout — or at minimum scrolls only the
   table itself — below desktop width (checked down to a 320px-wide
-  phone) instead of forcing the whole page to scroll sideways.
+  phone) instead of forcing the whole page to scroll sideways. Crews and
+  Clients got the same toolbar/hover/accent-color treatment as the rest.
 - ⏳ **Photo uploads & document storage** (the CompanyCam layer): not built
   yet. This needs your Google Workspace upgrade and Shared Drive set up
   first — see "Setting up Google Drive storage" below for what that will
