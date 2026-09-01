@@ -64,6 +64,12 @@ just the plan below). Right now:
   job page. Every contact in the Contacts directory now has its own detail
   page with a notes box too — both are on the creation forms as well, not
   just after the fact.
+- ✅ **Crew members without a CRM login**: adding someone to a crew (on the
+  New Crew form or an existing crew's page) is one text field — type an
+  existing staff member's name to link their real account, or a brand-new
+  name to add them as a name-only member (shows up on the crew and the
+  schedule, no email/password needed). Renamed "Checklist Templates" to
+  **Checklists/SOP** in the sidebar.
 - ✅ **Modern UI pass**: refreshed Dashboard (quick-action buttons, accented
   stat cards, hover affordances) and Jobs list (toolbar-style filters,
   trade-colored rows), plus every dropdown in the app was rebuilt as a

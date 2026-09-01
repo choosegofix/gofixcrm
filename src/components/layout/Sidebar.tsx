@@ -29,7 +29,7 @@ const navItems: { href: string; label: string; icon: LucideIcon; roles: string[]
   { href: "/map", label: "Map", icon: MapPin, roles: ["ADMIN", "OFFICE", "FIELD", "SUBCONTRACTOR"] },
   { href: "/invoices", label: "Invoices", icon: Receipt, roles: ["ADMIN", "OFFICE"] },
   { href: "/crews", label: "Crews", icon: HardHat, roles: ["ADMIN", "OFFICE"] },
-  { href: "/templates", label: "Checklist Templates", icon: ClipboardCheck, roles: ["ADMIN", "OFFICE"] },
+  { href: "/templates", label: "Checklists/SOP", icon: ClipboardCheck, roles: ["ADMIN", "OFFICE"] },
   { href: "/settings/users", label: "Team & Settings", icon: Settings, roles: ["ADMIN"] },
 ];
 

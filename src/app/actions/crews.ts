@@ -8,6 +8,29 @@ import { requireOfficeOrAdmin } from "@/lib/session";
 import { findOrCreateServiceArea } from "@/lib/serviceArea";
 import type { CrewType, Trade } from "@prisma/client";
 
+// Shared by createCrew and addCrewMember: a typed name either matches an
+// existing active user (linked properly, so they keep their one real
+// account) or becomes a name-only member with no CRM login -- for
+// helpers/laborers who just need to show up on the schedule.
+async function addMemberByName(crewId: string, companyId: string, typedName: string) {
+  const name = typedName.trim();
+  if (!name) return;
+
+  const existingMembers = await prisma.crewMember.findMany({ where: { crewId }, include: { user: true } });
+  const alreadyMember = existingMembers.some(
+    (m) => (m.user?.name ?? m.name ?? "").toLowerCase() === name.toLowerCase()
+  );
+  if (alreadyMember) return;
+
+  const matchedUser = await prisma.user.findFirst({
+    where: { companyId, isActive: true, name: { equals: name, mode: "insensitive" } },
+  });
+
+  await prisma.crewMember.create({
+    data: matchedUser ? { crewId, userId: matchedUser.id } : { crewId, name },
+  });
+}
+
 export async function createCrew(formData: FormData) {
   await requireOfficeOrAdmin();
   const company = await getCompany();
@@ -35,6 +58,11 @@ export async function createCrew(formData: FormData) {
   const contactPhone = String(formData.get("contactPhone") ?? "") || null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
+  const memberCount = Number(formData.get("memberCount") ?? 0);
+  const memberNames = Array.from({ length: memberCount }, (_, i) =>
+    String(formData.get(`member_${i}`) ?? "").trim()
+  ).filter(Boolean);
+
   const crew = await prisma.crew.create({
     data: {
       companyId: company.id,
@@ -49,6 +77,10 @@ export async function createCrew(formData: FormData) {
       },
     },
   });
+
+  for (const memberName of memberNames) {
+    await addMemberByName(crew.id, company.id, memberName);
+  }
 
   // Every crew automatically shows up in the general Contacts directory too.
   const [firstName, ...rest] = name.split(" ");
@@ -69,10 +101,12 @@ export async function createCrew(formData: FormData) {
 
 export async function addCrewMember(crewId: string, formData: FormData) {
   await requireOfficeOrAdmin();
-  const userId = String(formData.get("userId") ?? "");
-  if (!userId) throw new Error("Choose a team member.");
+  const name = String(formData.get("memberName") ?? "").trim();
+  if (!name) throw new Error("Type a name to add.");
 
-  await prisma.crewMember.create({ data: { crewId, userId } });
+  const crew = await prisma.crew.findUniqueOrThrow({ where: { id: crewId }, select: { companyId: true } });
+  await addMemberByName(crewId, crew.companyId, name);
+
   revalidatePath(`/crews/${crewId}`);
 }
 

@@ -29,7 +29,12 @@ export async function createJobComment(jobId: string, formData: FormData) {
     .sort((a, b) => b.name.length - a.name.length)
     .filter((u) => body.includes(`@${u.name}`));
   const crewMatches = crews
-    .map((c) => ({ id: c.id, name: c.name, memberUserIds: c.members.map((m) => m.userId) }))
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      // Name-only members (no userId) have no login, so there's no one to notify.
+      memberUserIds: c.members.map((m) => m.userId).filter((id): id is string => !!id),
+    }))
     .sort((a, b) => b.name.length - a.name.length)
     .filter((c) => body.includes(`@${c.name}`));
 

@@ -5,15 +5,23 @@ import { createCrew } from "@/app/actions/crews";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
+import { CrewMembersEditor } from "@/components/crews/CrewMembersEditor";
 
 export default async function NewCrewPage() {
   await requireOfficeOrAdmin();
   const company = await getCompany();
 
-  const areas = await prisma.serviceArea.findMany({
-    where: { companyId: company.id },
-    orderBy: { name: "asc" },
-  });
+  const [areas, users] = await Promise.all([
+    prisma.serviceArea.findMany({
+      where: { companyId: company.id },
+      orderBy: { name: "asc" },
+    }),
+    prisma.user.findMany({
+      where: { companyId: company.id, isActive: true },
+      orderBy: { name: "asc" },
+      select: { name: true },
+    }),
+  ]);
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -76,6 +84,13 @@ export default async function NewCrewPage() {
             </div>
             <FormField label="Notes" htmlFor="notes" hint="Reliability, preferences, anything worth remembering — internal only">
               <Textarea id="notes" name="notes" rows={3} />
+            </FormField>
+            <FormField
+              label="Members"
+              htmlFor="member_0"
+              hint="Type an existing staff member's name to link their account, or a new name to add them without a CRM login."
+            >
+              <CrewMembersEditor existingUserNames={users.map((u) => u.name)} />
             </FormField>
             <Button type="submit">Save crew</Button>
           </CardBody>

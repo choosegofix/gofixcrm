@@ -551,11 +551,14 @@ model Crew {
 }
 
 model CrewMember {
-  id       String   @id @default(cuid())
-  crewId   String
-  crew     Crew     @relation(fields: [crewId], references: [id], onDelete: Cascade)
-  userId   String
-  user     User     @relation(fields: [userId], references: [id])
+  id     String  @id @default(cuid())
+  crewId String
+  crew   Crew    @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+  // Set instead of userId for a member who isn't a system user -- just a
+  // name tracked on the crew for scheduling/reference, no CRM login.
+  name     String?
   joinedAt DateTime @default(now())
 
   @@unique([crewId, userId])

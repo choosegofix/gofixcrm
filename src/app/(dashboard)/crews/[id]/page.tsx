@@ -5,7 +5,7 @@ import { requireOfficeOrAdmin } from "@/lib/session";
 import Link from "next/link";
 import { addCrewMember, updateCrewNotes } from "@/app/actions/crews";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { FormField, Select, Textarea } from "@/components/ui/Field";
+import { FormField, Input, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { crewTypeLabels, tradeColors, tradeLabels } from "@/lib/labels";
@@ -31,7 +31,7 @@ export default async function CrewDetailPage({
 
   if (!crew) notFound();
 
-  const memberIds = new Set(crew.members.map((m) => m.userId));
+  const memberIds = new Set(crew.members.map((m) => m.userId).filter((id): id is string => !!id));
   const availableUsers = await prisma.user.findMany({
     where: { companyId: company.id, isActive: true, id: { notIn: [...memberIds] } },
     orderBy: { name: "asc" },
@@ -67,30 +67,31 @@ export default async function CrewDetailPage({
               <ul className="space-y-2">
                 {crew.members.map((m) => (
                   <li key={m.id} className="rounded-md border border-[#EFEAE0] px-3 py-2 text-sm">
-                    <p className="font-medium text-[#16233A]">{m.user.name}</p>
-                    <p className="text-xs text-[#5B6B82]">{m.user.email}</p>
+                    <p className="font-medium text-[#16233A]">{m.user?.name ?? m.name}</p>
+                    <p className="text-xs text-[#5B6B82]">{m.user?.email ?? "No CRM login"}</p>
                   </li>
                 ))}
               </ul>
             )}
-            {availableUsers.length > 0 && (
-              <form action={addMemberToCrew} className="flex items-end gap-2">
-                <div className="flex-1">
-                  <FormField label="Add a team member" htmlFor="userId">
-                    <Select id="userId" name="userId" required>
-                      {availableUsers.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormField>
-                </div>
-                <Button type="submit" size="sm">
-                  Add
-                </Button>
-              </form>
-            )}
+            <form action={addMemberToCrew} className="flex items-end gap-2">
+              <div className="flex-1">
+                <FormField
+                  label="Add a team member"
+                  htmlFor="memberName"
+                  hint="Type an existing staff member's name to link their account, or a new name to add them without a CRM login."
+                >
+                  <datalist id="crew-member-names">
+                    {availableUsers.map((u) => (
+                      <option key={u.id} value={u.name} />
+                    ))}
+                  </datalist>
+                  <Input id="memberName" name="memberName" list="crew-member-names" required />
+                </FormField>
+              </div>
+              <Button type="submit" size="sm">
+                Add
+              </Button>
+            </form>
           </CardBody>
         </Card>
 

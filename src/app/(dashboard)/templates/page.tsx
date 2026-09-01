@@ -22,7 +22,7 @@ export default async function TemplatesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[#16233A]">Checklist templates</h1>
+          <h1 className="text-xl font-semibold text-[#16233A]">Checklists/SOP</h1>
           <p className="text-sm text-[#5B6B82]">Apply a bundled task list to any job in one click</p>
         </div>
         <LinkButton href="/templates/new">+ New template</LinkButton>
