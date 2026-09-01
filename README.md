@@ -81,15 +81,24 @@ just the plan below). Right now:
   this comes up. Invoices also gained an optional "Billing contact" field
   so you can bill a specific person instead of always the client's default
   contact.
-- ✅ **Editing existing records**: Jobs (title/trade/pricing, via a small
-  disclosure on the job page), Contacts (name/title/email/phone/preferred
-  contact method), Quotes, and Invoices can all be edited after creation,
-  not just at creation time. Quotes and Invoices get a full edit page
-  (line items included, totals recalculate automatically) — a quote locks
-  once it's been approved, declined, or expired, and an invoice locks once
-  a payment has been recorded against it or it's voided, since editing the
-  amount at that point would contradict money already on record.
-  Client notes also became editable in place (were read-only before).
+- ✅ **Editing existing records**: Jobs, Quotes, Invoices, Clients, and
+  Contacts can all be edited well after creation, not just in the first
+  few minutes. Jobs: title, trade, pricing, and — since a job can get
+  booked under the wrong client by mistake — its client and property too,
+  via a small disclosure on the job page. Quotes and Invoices get a full
+  edit page: title/trade (quotes), due date/billing contact/discount
+  (invoices), client and property on both, and line items with totals
+  recalculating automatically. A quote locks once it's been approved,
+  declined, or expired; an invoice locks once a payment's been recorded
+  against it or it's voided (editing the amount at that point would
+  contradict money already on record) — invoices also gained a "Void"
+  action for the common case of a mistaken invoice, not just an edit.
+  Clients: the name itself is now editable (previously permanent once
+  set), along with every existing property's full address/access notes,
+  and every contact on a client's card now links straight to its own
+  editable page instead of being locked in place. Contact core fields
+  (name/title/email/phone/preferred contact method) and Client notes are
+  editable in place too.
 - ✅ **Modern UI pass**: refreshed Dashboard (quick-action buttons, accented
   stat cards, hover affordances) and Jobs list (toolbar-style filters,
   trade-colored rows), plus every dropdown in the app was rebuilt as a

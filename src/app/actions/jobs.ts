@@ -175,12 +175,16 @@ export async function updateJobDetails(jobId: string, formData: FormData) {
   const pricingResponsibility = String(
     formData.get("pricingResponsibility") ?? "COMPANY_PRICED"
   ) as PricingResponsibility;
+  const clientId = String(formData.get("clientId") ?? "");
+  const propertyId = String(formData.get("propertyId") ?? "");
 
-  if (!title || !trade) throw new Error("Title and trade are required.");
+  if (!title || !trade || !clientId || !propertyId) {
+    throw new Error("Title, trade, client, and property are required.");
+  }
 
   await prisma.job.update({
     where: { id: jobId },
-    data: { title, trade, pricingResponsibility },
+    data: { title, trade, pricingResponsibility, clientId, propertyId },
   });
 
   revalidatePath(`/jobs/${jobId}`);

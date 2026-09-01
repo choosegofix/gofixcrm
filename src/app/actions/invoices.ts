@@ -104,15 +104,17 @@ export async function updateInvoice(invoiceId: string, formData: FormData) {
     throw new Error("This invoice can't be edited anymore — it's void or already has payments recorded.");
   }
 
+  const issueDateRaw = String(formData.get("issueDate") ?? "");
   const dueDateRaw = String(formData.get("dueDate") ?? "");
-  if (!dueDateRaw) throw new Error("Due date is required.");
+  if (!issueDateRaw || !dueDateRaw) throw new Error("Issue date and due date are required.");
 
   const items = parseLineItems(formData);
   if (items.length === 0) throw new Error("Add at least one line item.");
 
+  const discountAmount = Number(formData.get("discountAmount") ?? 0) || 0;
   const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
   const taxAmount = subtotal * TAX_RATE;
-  const total = subtotal + taxAmount;
+  const total = subtotal + taxAmount - discountAmount;
 
   const billingContactName = String(formData.get("billingContactName") ?? "").trim();
   const billingContactId = billingContactName
@@ -127,10 +129,12 @@ export async function updateInvoice(invoiceId: string, formData: FormData) {
     await tx.invoice.update({
       where: { id: invoiceId },
       data: {
+        issueDate: parseISO(issueDateRaw),
         dueDate: parseISO(dueDateRaw),
         billingContactId,
         subtotal,
         taxAmount,
+        discountAmount,
         total,
         notes: String(formData.get("notes") ?? "") || null,
         lineItems: {
@@ -156,6 +160,26 @@ export async function updateInvoice(invoiceId: string, formData: FormData) {
 
   revalidatePath(`/invoices/${invoiceId}`);
   redirect(`/invoices/${invoiceId}`);
+}
+
+export async function voidInvoice(invoiceId: string) {
+  const user = await requireUser();
+  const invoice = await prisma.invoice.findUniqueOrThrow({ where: { id: invoiceId } });
+  if (Number(invoice.amountPaid) > 0) {
+    throw new Error("Can't void an invoice that already has payments recorded.");
+  }
+
+  await prisma.invoice.update({ where: { id: invoiceId }, data: { status: "VOID" } });
+
+  await logAudit({
+    companyId: invoice.companyId,
+    entityType: "Invoice",
+    entityId: invoiceId,
+    action: "voided",
+    performedByUserId: user.id,
+  });
+
+  revalidatePath(`/invoices/${invoiceId}`);
 }
 
 export async function recordPayment(invoiceId: string, formData: FormData) {

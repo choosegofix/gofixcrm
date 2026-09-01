@@ -106,7 +106,11 @@ export async function updateQuote(quoteId: string, formData: FormData) {
 
   const title = String(formData.get("title") ?? "").trim();
   const trade = String(formData.get("trade") ?? "") as Trade;
-  if (!title || !trade) throw new Error("Title and trade are required.");
+  const clientId = String(formData.get("clientId") ?? "");
+  const propertyId = String(formData.get("propertyId") ?? "");
+  if (!title || !trade || !clientId || !propertyId) {
+    throw new Error("Title, trade, client, and property are required.");
+  }
 
   const items = parseLineItems(formData);
   if (items.length === 0) throw new Error("Add at least one line item.");
@@ -126,6 +130,8 @@ export async function updateQuote(quoteId: string, formData: FormData) {
       data: {
         title,
         trade,
+        clientId,
+        propertyId,
         subtotal,
         taxAmount,
         total,

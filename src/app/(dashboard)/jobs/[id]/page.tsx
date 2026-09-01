@@ -22,6 +22,7 @@ import { JobStatusSelect, VisitStatusSelect, RemoveAssignmentButton } from "@/co
 import { ScheduleVisitButton } from "@/components/jobs/ScheduleVisitButton";
 import { TaskCheckbox } from "@/components/jobs/TaskCheckbox";
 import { CommentComposer, type Mentionable } from "@/components/jobs/CommentComposer";
+import { ClientPropertySelect } from "@/components/jobs/ClientPropertySelect";
 import { LinkButton } from "@/components/ui/Button";
 import { invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
@@ -59,7 +60,7 @@ export default async function JobDetailPage({
   if (!job) notFound();
   if (user.role === "SUBCONTRACTOR" && !(await hasJobAccess(user.id, job.id))) notFound();
 
-  const [users, crewsRaw, allTags, templates] = await Promise.all([
+  const [users, crewsRaw, allTags, templates, clients] = await Promise.all([
     prisma.user.findMany({
       where: { companyId: company.id, isActive: true, role: { in: ["FIELD", "SUBCONTRACTOR", "OFFICE"] } },
       orderBy: { name: "asc" },
@@ -73,6 +74,11 @@ export default async function JobDetailPage({
     prisma.taskTemplate.findMany({
       where: { companyId: company.id, OR: [{ trade: job.trade }, { trade: null }] },
       orderBy: { name: "asc" },
+    }),
+    prisma.client.findMany({
+      where: { companyId: company.id, isArchived: false },
+      orderBy: { name: "asc" },
+      include: { properties: { orderBy: { createdAt: "asc" } } },
     }),
   ]);
 
@@ -224,7 +230,13 @@ export default async function JobDetailPage({
           </summary>
           <Card className="mt-2">
             <CardBody>
-              <form action={updateDetailsForJob} className="grid gap-3 sm:grid-cols-3">
+              <form action={updateDetailsForJob} className="space-y-4">
+                <ClientPropertySelect
+                  clients={clients}
+                  initialClientId={job.clientId}
+                  initialPropertyId={job.propertyId}
+                />
+                <div className="grid gap-3 sm:grid-cols-3">
                 <FormField label="Job title" htmlFor="editTitle" required>
                   <Input id="editTitle" name="title" required defaultValue={job.title} />
                 </FormField>
@@ -241,9 +253,8 @@ export default async function JobDetailPage({
                     <option value="SUBCONTRACTOR_PRICED">Subcontractor-priced</option>
                   </Select>
                 </FormField>
-                <div className="sm:col-span-3">
-                  <Button type="submit" size="sm">Save details</Button>
                 </div>
+                <Button type="submit" size="sm">Save details</Button>
               </form>
             </CardBody>
           </Card>

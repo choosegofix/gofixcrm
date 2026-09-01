@@ -9,10 +9,12 @@ type ClientWithProperties = Client & { properties: Property[] };
 export function ClientPropertySelect({
   clients,
   initialClientId,
+  initialPropertyId,
   clientOptional = false,
 }: {
   clients: ClientWithProperties[];
   initialClientId?: string;
+  initialPropertyId?: string;
   clientOptional?: boolean;
 }) {
   const [clientId, setClientId] = useState(initialClientId ?? "");
@@ -37,7 +39,13 @@ export function ClientPropertySelect({
         </Select>
       </FormField>
       <FormField label="Property" htmlFor="propertyId" required={!clientOptional}>
-        <Select id="propertyId" name="propertyId" required={!clientOptional} disabled={properties.length === 0}>
+        <Select
+          id="propertyId"
+          name="propertyId"
+          required={!clientOptional}
+          disabled={properties.length === 0}
+          defaultValue={initialPropertyId}
+        >
           {properties.length === 0 && <option value="">— none available —</option>}
           {properties.map((p) => (
             <option key={p.id} value={p.id}>

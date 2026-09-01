@@ -9,6 +9,52 @@ import { findOrCreateServiceArea } from "@/lib/serviceArea";
 import { geocodeAddress } from "@/lib/geocode";
 import type { CommPreference } from "@prisma/client";
 
+export async function updateClientDetails(clientId: string, formData: FormData) {
+  await requireOfficeOrAdmin();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) throw new Error("Client name is required.");
+
+  await prisma.client.update({
+    where: { id: clientId },
+    data: { name },
+  });
+
+  revalidatePath(`/clients/${clientId}`);
+  revalidatePath("/clients");
+}
+
+export async function updateProperty(propertyId: string, formData: FormData) {
+  await requireOfficeOrAdmin();
+  const property = await prisma.property.findUniqueOrThrow({ where: { id: propertyId } });
+  const addressLine1 = String(formData.get("addressLine1") ?? "").trim();
+  if (!addressLine1) throw new Error("Street address is required.");
+
+  const city = String(formData.get("city") ?? "").trim() || "Toronto";
+  const client = await prisma.client.findUniqueOrThrow({ where: { id: property.clientId } });
+  const serviceArea = await findOrCreateServiceArea(client.companyId, city);
+
+  // Only re-geocode if the address actually changed -- avoid burning a
+  // lookup (and the small risk of it failing) on every unrelated edit.
+  const addressChanged = addressLine1 !== property.addressLine1 || city !== property.city;
+  const coords = addressChanged ? await geocodeAddress(`${addressLine1}, ${city}, ON, Canada`) : null;
+
+  await prisma.property.update({
+    where: { id: propertyId },
+    data: {
+      label: String(formData.get("label") ?? "") || null,
+      addressLine1,
+      addressLine2: String(formData.get("addressLine2") ?? "") || null,
+      city,
+      serviceAreaId: serviceArea?.id,
+      postalCode: String(formData.get("postalCode") ?? "") || null,
+      accessNotes: String(formData.get("accessNotes") ?? "") || null,
+      ...(addressChanged ? { lat: coords?.lat ?? null, lng: coords?.lng ?? null } : {}),
+    },
+  });
+
+  revalidatePath(`/clients/${property.clientId}`);
+}
+
 export async function updateClientNotes(clientId: string, formData: FormData) {
   await requireOfficeOrAdmin();
   const notes = String(formData.get("notes") ?? "").trim();

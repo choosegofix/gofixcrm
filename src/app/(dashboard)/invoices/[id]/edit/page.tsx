@@ -65,7 +65,16 @@ export default async function EditInvoicePage({
       <form action={updateThisInvoice} className="space-y-6">
         <Card>
           <CardHeader title="Invoice details" />
-          <CardBody className="space-y-4">
+          <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <FormField label="Issue date" htmlFor="issueDate" required>
+              <Input
+                id="issueDate"
+                name="issueDate"
+                type="date"
+                required
+                defaultValue={format(invoice.issueDate, "yyyy-MM-dd")}
+              />
+            </FormField>
             <FormField label="Due date" htmlFor="dueDate" required>
               <Input
                 id="dueDate"
@@ -73,6 +82,16 @@ export default async function EditInvoicePage({
                 type="date"
                 required
                 defaultValue={format(invoice.dueDate, "yyyy-MM-dd")}
+              />
+            </FormField>
+            <FormField label="Discount" htmlFor="discountAmount" hint="Leave blank for no discount">
+              <Input
+                id="discountAmount"
+                name="discountAmount"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={Number(invoice.discountAmount) || undefined}
               />
             </FormField>
           </CardBody>

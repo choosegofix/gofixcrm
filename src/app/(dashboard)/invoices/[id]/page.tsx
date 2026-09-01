@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { invoiceStatusColors, invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency } from "@/lib/currency";
 import { PaymentForm } from "@/components/invoices/PaymentForm";
+import { VoidInvoiceButton } from "@/components/invoices/VoidInvoiceButton";
 import { TicketHeader } from "@/components/ui/TicketHeader";
 import { format } from "date-fns";
 
@@ -68,9 +69,12 @@ export default async function InvoiceDetailPage({
               Issued {format(invoice.issueDate, "MMM d")} · Due {format(invoice.dueDate, "MMM d, yyyy")}
             </span>
             {isEditable && (
-              <Link href={`/invoices/${invoice.id}/edit`} className="text-xs font-medium text-[#D9480F] hover:underline">
-                Edit invoice →
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href={`/invoices/${invoice.id}/edit`} className="text-xs font-medium text-[#D9480F] hover:underline">
+                  Edit invoice →
+                </Link>
+                <VoidInvoiceButton invoiceId={invoice.id} />
+              </div>
             )}
           </div>
         }
@@ -117,6 +121,12 @@ export default async function InvoiceDetailPage({
                 <span>HST (13%)</span>
                 <span className="tabular-nums font-mono">{formatCurrency(invoice.taxAmount)}</span>
               </div>
+              {Number(invoice.discountAmount) > 0 && (
+                <div className="flex justify-between text-[#5B6B82]">
+                  <span>Discount</span>
+                  <span className="tabular-nums font-mono">-{formatCurrency(invoice.discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-semibold text-[#16233A]">
                 <span>Total</span>
                 <span className="tabular-nums font-mono">{formatCurrency(invoice.total)}</span>

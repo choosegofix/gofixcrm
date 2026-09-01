@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireOfficeOrAdmin } from "@/lib/session";
-import { addContact, addProperty, updateClientNotes } from "@/app/actions/clients";
+import { addContact, addProperty, updateClientDetails, updateClientNotes, updateProperty } from "@/app/actions/clients";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button, LinkButton } from "@/components/ui/Button";
@@ -32,6 +32,7 @@ export default async function ClientDetailPage({
   const addContactWithClient = addContact.bind(null, client.id);
   const addPropertyWithClient = addProperty.bind(null, client.id);
   const updateNotesForClient = updateClientNotes.bind(null, client.id);
+  const updateDetailsForClient = updateClientDetails.bind(null, client.id);
 
   return (
     <div className="space-y-6">
@@ -50,6 +51,18 @@ export default async function ClientDetailPage({
           <LinkButton href={`/jobs/new?clientId=${client.id}`}>+ New job</LinkButton>
         </div>
       </div>
+
+      <details className="text-sm">
+        <summary className="cursor-pointer font-medium text-[#D9480F]">▸ Edit client name</summary>
+        <form action={updateDetailsForClient} className="mt-2 flex items-end gap-2 rounded-md border border-[#E3DDD0] bg-white p-3 shadow-sm">
+          <div className="flex-1">
+            <FormField label="Client name" htmlFor="clientName" required>
+              <Input id="clientName" name="name" required defaultValue={client.name} />
+            </FormField>
+          </div>
+          <Button type="submit" size="sm">Save</Button>
+        </form>
+      </details>
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
@@ -92,16 +105,50 @@ export default async function ClientDetailPage({
             <CardBody className="space-y-4">
               {client.properties.length > 0 && (
                 <ul className="divide-y divide-[#EFEAE0] rounded-md border border-[#EFEAE0]">
-                  {client.properties.map((p) => (
-                    <li key={p.id} className="px-4 py-3 text-sm">
-                      <p className="font-medium text-[#16233A]">{p.label || p.addressLine1}</p>
-                      <p className="text-[#5B6B82]">
-                        {p.addressLine1}
-                        {p.addressLine2 ? `, ${p.addressLine2}` : ""}, {p.city}
-                        {p.postalCode ? ` ${p.postalCode}` : ""}
-                      </p>
-                    </li>
-                  ))}
+                  {client.properties.map((p) => {
+                    const updateThisProperty = updateProperty.bind(null, p.id);
+                    return (
+                      <li key={p.id} className="px-4 py-3 text-sm">
+                        <p className="font-medium text-[#16233A]">{p.label || p.addressLine1}</p>
+                        <p className="text-[#5B6B82]">
+                          {p.addressLine1}
+                          {p.addressLine2 ? `, ${p.addressLine2}` : ""}, {p.city}
+                          {p.postalCode ? ` ${p.postalCode}` : ""}
+                        </p>
+                        {p.accessNotes && <p className="mt-0.5 text-xs text-[#8A93A3]">{p.accessNotes}</p>}
+                        <details className="mt-1.5">
+                          <summary className="cursor-pointer text-xs font-medium text-[#D9480F]">Edit</summary>
+                          <form action={updateThisProperty} className="mt-2 grid grid-cols-2 gap-3">
+                            <FormField label="Label" htmlFor={`label-${p.id}`}>
+                              <Input id={`label-${p.id}`} name="label" defaultValue={p.label ?? ""} placeholder="e.g. Building A" />
+                            </FormField>
+                            <FormField label="City" htmlFor={`city-${p.id}`}>
+                              <Input id={`city-${p.id}`} name="city" defaultValue={p.city} />
+                            </FormField>
+                            <div className="col-span-2">
+                              <FormField label="Street address" htmlFor={`addr-${p.id}`} required>
+                                <Input id={`addr-${p.id}`} name="addressLine1" required defaultValue={p.addressLine1} />
+                              </FormField>
+                            </div>
+                            <FormField label="Unit / suite" htmlFor={`addr2-${p.id}`}>
+                              <Input id={`addr2-${p.id}`} name="addressLine2" defaultValue={p.addressLine2 ?? ""} />
+                            </FormField>
+                            <FormField label="Postal code" htmlFor={`postal-${p.id}`}>
+                              <Input id={`postal-${p.id}`} name="postalCode" defaultValue={p.postalCode ?? ""} />
+                            </FormField>
+                            <div className="col-span-2">
+                              <FormField label="Access notes" htmlFor={`access-${p.id}`}>
+                                <Input id={`access-${p.id}`} name="accessNotes" defaultValue={p.accessNotes ?? ""} placeholder="Gate code, parking, etc." />
+                              </FormField>
+                            </div>
+                            <div className="col-span-2">
+                              <Button type="submit" size="sm">Save property</Button>
+                            </div>
+                          </form>
+                        </details>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
               <details className="text-sm">
@@ -141,14 +188,19 @@ export default async function ClientDetailPage({
                 <ul className="space-y-3">
                   {client.contacts.map((c) => (
                     <li key={c.id} className="rounded-md border border-[#EFEAE0] p-3 text-sm">
-                      <p className="font-medium text-[#16233A]">
+                      <Link href={`/contacts/${c.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
                         {c.firstName} {c.lastName}
                         {c.isPrimary && <span className="ml-2 text-xs font-normal text-[#D9480F]">Primary</span>}
-                      </p>
+                      </Link>
                       {c.title && <p className="text-xs text-[#5B6B82]">{c.title}</p>}
                       {c.email && <p className="text-[#5B6B82]">{c.email}</p>}
                       {c.phone && <p className="text-[#5B6B82]">{c.phone}</p>}
-                      <p className="mt-1 text-xs text-[#8A93A3]">Prefers {c.commPreference.toLowerCase()}</p>
+                      <p className="mt-1 text-xs text-[#8A93A3]">
+                        Prefers {c.commPreference.toLowerCase()} ·{" "}
+                        <Link href={`/contacts/${c.id}`} className="text-[#D9480F] hover:underline">
+                          Edit →
+                        </Link>
+                      </p>
                     </li>
                   ))}
                 </ul>

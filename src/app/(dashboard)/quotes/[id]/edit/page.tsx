@@ -7,6 +7,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { LineItemsEditor } from "@/components/quotes/LineItemsEditor";
+import { ClientPropertySelect } from "@/components/jobs/ClientPropertySelect";
+import { getCompany } from "@/lib/company";
 import { format } from "date-fns";
 
 export default async function EditQuotePage({
@@ -16,11 +18,19 @@ export default async function EditQuotePage({
 }) {
   await requireOfficeOrAdmin();
   const { id } = await params;
+  const company = await getCompany();
 
-  const quote = await prisma.quote.findUnique({
-    where: { id },
-    include: { client: true, property: true, lineItems: { orderBy: { sortOrder: "asc" } } },
-  });
+  const [quote, clients] = await Promise.all([
+    prisma.quote.findUnique({
+      where: { id },
+      include: { client: true, property: true, lineItems: { orderBy: { sortOrder: "asc" } } },
+    }),
+    prisma.client.findMany({
+      where: { companyId: company.id, isArchived: false },
+      orderBy: { name: "asc" },
+      include: { properties: { orderBy: { createdAt: "asc" } } },
+    }),
+  ]);
 
   if (!quote) notFound();
   if (quote.status === "APPROVED" || quote.status === "DECLINED" || quote.status === "EXPIRED") {
@@ -45,6 +55,11 @@ export default async function EditQuotePage({
         <Card>
           <CardHeader title="Quote for" />
           <CardBody className="space-y-4">
+            <ClientPropertySelect
+              clients={clients}
+              initialClientId={quote.clientId}
+              initialPropertyId={quote.propertyId}
+            />
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Quote title" htmlFor="title" required>
                 <Input id="title" name="title" required defaultValue={quote.title} />
