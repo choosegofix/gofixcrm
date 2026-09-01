@@ -20,6 +20,11 @@ export default async function DashboardLayout({
     take: 20,
   });
 
+  async function doSignOut() {
+    "use server";
+    await signOut({ redirectTo: "/login" });
+  }
+
   return (
     <div className="flex min-h-screen bg-[#FAF7F1]">
       <aside className="hidden w-60 shrink-0 bg-[#16233A] md:block">
@@ -34,26 +39,28 @@ export default async function DashboardLayout({
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-[#E3DDD0] bg-white px-6 py-3">
-          <MobileNav role={user.role} />
+          <MobileNav
+            role={user.role}
+            userName={user.name ?? ""}
+            roleLabel={roleLabels[user.role as Role]}
+            signOutAction={doSignOut}
+          />
           <div className="ml-auto flex items-center gap-3">
             <NotificationBell notifications={notifications} />
-            <div className="text-right">
-              <p className="text-sm font-medium text-[#16233A]">{user.name}</p>
-              <p className="text-xs text-[#5B6B82]">{roleLabels[user.role as Role]}</p>
+            <div className="hidden items-center gap-3 md:flex">
+              <div className="text-right">
+                <p className="text-sm font-medium text-[#16233A]">{user.name}</p>
+                <p className="text-xs text-[#5B6B82]">{roleLabels[user.role as Role]}</p>
+              </div>
+              <form action={doSignOut}>
+                <button
+                  type="submit"
+                  className="rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm text-[#16233A] hover:bg-[#FAF7F1]"
+                >
+                  Sign out
+                </button>
+              </form>
             </div>
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/login" });
-              }}
-            >
-              <button
-                type="submit"
-                className="rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm text-[#16233A] hover:bg-[#FAF7F1]"
-              >
-                Sign out
-              </button>
-            </form>
           </div>
         </header>
         <main className="flex-1 p-6">{children}</main>

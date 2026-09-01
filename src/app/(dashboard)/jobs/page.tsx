@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
@@ -14,7 +14,6 @@ import {
   jobStatusColors,
   jobStatusLabels,
   jobStatusOrder,
-  tradeColors,
   tradeLabels,
 } from "@/lib/labels";
 import { format } from "date-fns";
@@ -56,21 +55,27 @@ export default async function JobsPage({
     return qs ? `/jobs?${qs}` : "/jobs";
   }
 
+  const tradeAccent: Record<Trade, string> = {
+    HVAC: "#2E4A63",
+    ELECTRICAL: "#8A5A19",
+    PLUMBING: "#1F5C51",
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[#16233A]">Jobs</h1>
-          <p className="text-sm text-[#5B6B82]">{jobs.length} jobs</p>
+          <p className="tabular-nums font-mono text-sm text-[#5B6B82]">{jobs.length} jobs</p>
         </div>
         {user.role !== "SUBCONTRACTOR" && <LinkButton href="/jobs/new">+ New job</LinkButton>}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E3DDD0] bg-white px-3 py-2.5 shadow-sm">
         <Link
           href={statusHref(undefined)}
-          className={`rounded-full border px-3 py-1 text-xs font-medium ${
-            !status ? "border-[#D9480F] bg-[#FBE7DB] text-[#D9480F]" : "border-[#E3DDD0] text-[#5B6B82]"
+          className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+            !status ? "border-[#D9480F] bg-[#FBE7DB] text-[#D9480F]" : "border-[#E3DDD0] text-[#5B6B82] hover:border-[#C7BFA9]"
           }`}
         >
           All
@@ -79,8 +84,8 @@ export default async function JobsPage({
           <Link
             key={s}
             href={statusHref(s)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              status === s ? "border-[#D9480F] bg-[#FBE7DB] text-[#D9480F]" : "border-[#E3DDD0] text-[#5B6B82]"
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+              status === s ? "border-[#D9480F] bg-[#FBE7DB] text-[#D9480F]" : "border-[#E3DDD0] text-[#5B6B82] hover:border-[#C7BFA9]"
             }`}
           >
             {jobStatusLabels[s]}
@@ -121,30 +126,45 @@ export default async function JobsPage({
             />
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-[#EFEAE0] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
+              <thead className="border-b border-[#EFEAE0] bg-[#FAF9F5] text-left text-xs uppercase tracking-wide text-[#5B6B82]">
                 <tr>
-                  <th className="px-5 py-2 font-medium">Job</th>
-                  <th className="px-5 py-2 font-medium">Client</th>
-                  <th className="px-5 py-2 font-medium">Trade</th>
-                  <th className="px-5 py-2 font-medium">Area</th>
-                  <th className="px-5 py-2 font-medium">Scheduled</th>
-                  <th className="px-5 py-2 font-medium">Status</th>
+                  <th className="py-2 pl-5 pr-2 font-medium"></th>
+                  <th className="px-2 py-2 font-medium">Job</th>
+                  <th className="px-2 py-2 font-medium">Client</th>
+                  <th className="px-2 py-2 font-medium">Trade</th>
+                  <th className="px-2 py-2 font-medium">Area</th>
+                  <th className="px-2 py-2 font-medium">Scheduled</th>
+                  <th className="px-2 py-2 font-medium">Status</th>
+                  <th className="py-2 pl-2 pr-5 font-medium"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EFEAE0]">
                 {jobs.map((j) => (
-                  <tr key={j.id} className="hover:bg-[#FAF7F1]">
-                    <td className="px-5 py-3">
-                      <Link href={`/jobs/${j.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
+                  <tr key={j.id} className="group transition hover:bg-[#FAF7F1]">
+                    <td className="py-3 pl-5 pr-2">
+                      <span
+                        className="block h-8 w-1 rounded-full"
+                        style={{ backgroundColor: tradeAccent[j.trade] }}
+                        title={tradeLabels[j.trade]}
+                      />
+                    </td>
+                    <td className="px-2 py-3">
+                      <Link href={`/jobs/${j.id}`} className="font-medium text-[#16233A] group-hover:text-[#D9480F]">
                         {j.jobNumber} · {j.title}
                       </Link>
                       <p className="text-xs text-[#5B6B82]">{j.property.addressLine1}</p>
                     </td>
-                    <td className="px-5 py-3 text-[#5B6B82]">{j.client.name}</td>
-                    <td className="px-5 py-3">
-                      <Badge className={tradeColors[j.trade]}>{tradeLabels[j.trade]}</Badge>
+                    <td className="px-2 py-3 text-[#5B6B82]">{j.client.name}</td>
+                    <td className="px-2 py-3">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#3A4A5F]">
+                        <span
+                          className="inline-block h-1.5 w-1.5 rounded-full"
+                          style={{ backgroundColor: tradeAccent[j.trade] }}
+                        />
+                        {tradeLabels[j.trade]}
+                      </span>
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-2 py-3">
                       {j.property.serviceArea ? (
                         <Badge className={areaColor(j.property.serviceArea.name)}>
                           {j.property.serviceArea.name}
@@ -153,11 +173,20 @@ export default async function JobsPage({
                         <span className="text-xs text-[#8A93A3]">—</span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-[#5B6B82]">
+                    <td className="tabular-nums px-2 py-3 font-mono text-xs text-[#5B6B82]">
                       {j.scheduledStart ? format(j.scheduledStart, "MMM d, yyyy") : "—"}
                     </td>
-                    <td className="px-5 py-3">
-                      <Badge className={jobStatusColors[j.status]}>{jobStatusLabels[j.status]}</Badge>
+                    <td className="px-2 py-3">
+                      <Badge className={jobStatusColors[j.status]}>
+                        <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current" />
+                        {jobStatusLabels[j.status]}
+                      </Badge>
+                    </td>
+                    <td className="py-3 pl-2 pr-5 text-right">
+                      <ChevronRight
+                        size={16}
+                        className="inline-block text-[#C7C0B0] opacity-0 transition group-hover:opacity-100"
+                      />
                     </td>
                   </tr>
                 ))}

@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireOfficeOrAdmin } from "@/lib/session";
-import { addCrewMember } from "@/app/actions/crews";
+import Link from "next/link";
+import { addCrewMember, updateCrewNotes } from "@/app/actions/crews";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { FormField, Select } from "@/components/ui/Field";
+import { FormField, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { crewTypeLabels, tradeColors, tradeLabels } from "@/lib/labels";
@@ -37,6 +38,7 @@ export default async function CrewDetailPage({
   });
 
   const addMemberToCrew = addCrewMember.bind(null, crew.id);
+  const updateNotesForCrew = updateCrewNotes.bind(null, crew.id);
 
   return (
     <div className="space-y-6">
@@ -100,13 +102,33 @@ export default async function CrewDetailPage({
             ) : (
               <ul className="divide-y divide-[#EFEAE0]">
                 {crew.jobAssignments.map((a) => (
-                  <li key={a.id} className="px-5 py-3 text-sm">
-                    <p className="font-medium text-[#16233A]">{a.job.title}</p>
-                    <p className="text-xs text-[#5B6B82]">{a.job.client.name}</p>
+                  <li key={a.id}>
+                    <Link
+                      href={`/jobs/${a.job.id}`}
+                      className="block px-5 py-3 text-sm transition hover:bg-[#FAF7F1]"
+                    >
+                      <p className="font-medium text-[#16233A] hover:text-[#D9480F]">{a.job.title}</p>
+                      <p className="text-xs text-[#5B6B82]">{a.job.client.name}</p>
+                    </Link>
                   </li>
                 ))}
               </ul>
             )}
+          </CardBody>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader title="Notes" subtitle="Internal — reliability, preferences, anything worth remembering" />
+          <CardBody>
+            <form action={updateNotesForCrew} className="space-y-2">
+              <Textarea
+                name="notes"
+                rows={5}
+                defaultValue={crew.notes ?? ""}
+                placeholder="e.g. Great with commercial HVAC, prefers morning starts, license expires March 2027…"
+              />
+              <Button type="submit" size="sm">Save notes</Button>
+            </form>
           </CardBody>
         </Card>
       </div>

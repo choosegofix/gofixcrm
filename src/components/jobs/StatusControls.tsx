@@ -4,23 +4,24 @@ import { useTransition } from "react";
 import { updateJobStatus, removeAssignment } from "@/app/actions/jobs";
 import { updateVisitStatus } from "@/app/actions/visits";
 import { jobStatusLabels, visitStatusLabels } from "@/lib/labels";
+import { Select } from "@/components/ui/Field";
 import type { JobStatus, VisitStatus } from "@prisma/client";
 
 export function JobStatusSelect({ jobId, status }: { jobId: string; status: JobStatus }) {
   const [pending, startTransition] = useTransition();
   return (
-    <select
+    <Select
       defaultValue={status}
       disabled={pending}
       onChange={(e) => startTransition(() => updateJobStatus(jobId, e.target.value as JobStatus))}
-      className="rounded-md border border-[#DDD6C7] px-3 py-1.5 text-sm font-medium text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F] disabled:opacity-60"
+      className="flex items-center justify-between gap-2 rounded-md border border-[#DDD6C7] bg-white px-3 py-1.5 text-sm font-medium text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F] disabled:opacity-60"
     >
       {Object.entries(jobStatusLabels).map(([value, label]) => (
         <option key={value} value={value}>
           {label}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 
@@ -35,20 +36,20 @@ export function VisitStatusSelect({
 }) {
   const [pending, startTransition] = useTransition();
   return (
-    <select
+    <Select
       defaultValue={status}
       disabled={pending}
       onChange={(e) =>
         startTransition(() => updateVisitStatus(jobId, visitId, e.target.value as VisitStatus))
       }
-      className="rounded-md border border-[#DDD6C7] px-2 py-1 text-xs font-medium text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F] disabled:opacity-60"
+      className="flex items-center justify-between gap-2 rounded-md border border-[#DDD6C7] bg-white px-2 py-1 text-xs font-medium text-[#16233A] focus:border-[#D9480F] focus:outline-none focus:ring-1 focus:ring-[#D9480F] disabled:opacity-60"
     >
       {Object.entries(visitStatusLabels).map(([value, label]) => (
         <option key={value} value={value}>
           {label}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 

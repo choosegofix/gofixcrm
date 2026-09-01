@@ -27,3 +27,15 @@ export async function createGeneralContact(formData: FormData) {
 
   revalidatePath("/contacts");
 }
+
+export async function updateContactNotes(contactId: string, formData: FormData) {
+  await requireOfficeOrAdmin();
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  await prisma.contact.update({
+    where: { id: contactId },
+    data: { notes: notes || null },
+  });
+
+  revalidatePath(`/contacts/${contactId}`);
+}

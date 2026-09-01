@@ -164,3 +164,31 @@ export async function removeAssignment(jobId: string, assignmentId: string) {
   await prisma.jobAssignment.delete({ where: { id: assignmentId } });
   revalidatePath(`/jobs/${jobId}`);
 }
+
+export async function updateJobDescription(jobId: string, formData: FormData) {
+  const user = await requireUser();
+  if (user.role === "SUBCONTRACTOR") throw new Error("Only office staff can edit the job description.");
+  await requireJobAccess(user, jobId);
+  const description = String(formData.get("description") ?? "").trim();
+
+  await prisma.job.update({
+    where: { id: jobId },
+    data: { description: description || null },
+  });
+
+  revalidatePath(`/jobs/${jobId}`);
+}
+
+export async function updateJobNotes(jobId: string, formData: FormData) {
+  const user = await requireUser();
+  if (user.role === "SUBCONTRACTOR") throw new Error("Only office staff can edit job notes.");
+  await requireJobAccess(user, jobId);
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  await prisma.job.update({
+    where: { id: jobId },
+    data: { notes: notes || null },
+  });
+
+  revalidatePath(`/jobs/${jobId}`);
+}

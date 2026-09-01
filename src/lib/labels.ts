@@ -8,7 +8,15 @@ import type {
   InvoiceStatus,
   PricingResponsibility,
   CrewType,
+  CommPreference,
 } from "@prisma/client";
+
+export const commPreferenceLabels: Record<CommPreference, string> = {
+  EMAIL: "Email",
+  SMS: "SMS",
+  PHONE: "Phone",
+  ANY: "Any",
+};
 
 export const tradeLabels: Record<Trade, string> = {
   HVAC: "HVAC",

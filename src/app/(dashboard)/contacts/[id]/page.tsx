@@ -1,0 +1,141 @@
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Mail, Phone, ArrowLeft } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { requireOfficeOrAdmin } from "@/lib/session";
+import { updateContactNotes } from "@/app/actions/contacts";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Textarea } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { commPreferenceLabels } from "@/lib/labels";
+
+function contactType(c: { clientId: string | null; leadId: string | null; crewId: string | null }) {
+  if (c.leadId) return "Lead";
+  if (c.crewId) return "Crew";
+  if (c.clientId) return "Client";
+  return "General";
+}
+
+const TYPE_BADGE: Record<string, string> = {
+  Client: "bg-[#E4EBF1] text-[#2E4A63] border-[#C7D6E3]",
+  Lead: "bg-[#FBEEDC] text-[#8A5A19] border-[#E9CBA0]",
+  Crew: "bg-[#E1EEEA] text-[#1F5C51] border-[#BFDAD2]",
+  General: "bg-[#EEEAE1] text-[#5B6B82] border-[#DDD6C7]",
+};
+
+export default async function ContactDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  await requireOfficeOrAdmin();
+  const { id } = await params;
+
+  const contact = await prisma.contact.findUnique({
+    where: { id },
+    include: { client: true, lead: true, crew: true },
+  });
+
+  if (!contact) notFound();
+
+  const type = contactType(contact);
+  const sourceHref =
+    type === "Client" && contact.clientId
+      ? `/clients/${contact.clientId}`
+      : type === "Crew" && contact.crewId
+        ? `/crews/${contact.crewId}`
+        : type === "Lead"
+          ? "/leads"
+          : null;
+  const sourceLabel =
+    type === "Client" && contact.client
+      ? contact.client.name
+      : type === "Crew" && contact.crew
+        ? contact.crew.name
+        : type === "Lead"
+          ? "Lead"
+          : "General contact";
+
+  const updateNotesForContact = updateContactNotes.bind(null, contact.id);
+
+  return (
+    <div className="space-y-6">
+      <Link href="/contacts" className="inline-flex items-center gap-1 text-sm text-[#5B6B82] hover:text-[#D9480F]">
+        <ArrowLeft size={14} strokeWidth={2} />
+        Back to contacts
+      </Link>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-[#16233A]">
+            {contact.firstName} {contact.lastName}
+          </h1>
+          {contact.title && <p className="text-sm text-[#5B6B82]">{contact.title}</p>}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge className={TYPE_BADGE[type]}>{type}</Badge>
+            {contact.isPrimary && (
+              <Badge className="border-[#DDD6C7] bg-[#EEEAE1] text-[#5B6B82]">Primary</Badge>
+            )}
+            {contact.isBilling && (
+              <Badge className="border-[#DDD6C7] bg-[#EEEAE1] text-[#5B6B82]">Billing</Badge>
+            )}
+            {sourceHref ? (
+              <Link href={sourceHref} className="text-sm font-medium text-[#D9480F] hover:underline">
+                {sourceLabel} →
+              </Link>
+            ) : (
+              <span className="text-sm text-[#8A93A3]">{sourceLabel}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader title="Contact info" />
+          <CardBody className="space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Mail size={15} className="text-[#8A93A3]" />
+              {contact.email ? (
+                <a href={`mailto:${contact.email}`} className="text-[#16233A] hover:text-[#D9480F]">
+                  {contact.email}
+                </a>
+              ) : (
+                <span className="text-[#8A93A3]">No email on file</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Phone size={15} className="text-[#8A93A3]" />
+              {contact.phone ? (
+                <a href={`tel:${contact.phone}`} className="text-[#16233A] hover:text-[#D9480F]">
+                  {contact.phone}
+                </a>
+              ) : (
+                <span className="text-[#8A93A3]">No phone on file</span>
+              )}
+            </div>
+            <p className="text-xs text-[#5B6B82]">
+              Prefers <span className="font-medium text-[#16233A]">{commPreferenceLabels[contact.commPreference]}</span>
+            </p>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader title="Notes" subtitle="Internal — anything worth remembering about this contact" />
+          <CardBody>
+            <form action={updateNotesForContact} className="space-y-2">
+              <Textarea
+                name="notes"
+                rows={5}
+                defaultValue={contact.notes ?? ""}
+                placeholder="e.g. Prefers texts over calls, usually on site Tuesdays, tricky gate code…"
+              />
+              <Button type="submit" size="sm">Save notes</Button>
+            </form>
+          </CardBody>
+        </Card>
+      </div>
+    </div>
+  );
+}

@@ -299,6 +299,7 @@ model Contact {
   commPreference CommPreference @default(EMAIL)
   isPrimary      Boolean        @default(false)
   isBilling      Boolean        @default(false)
+  notes          String?        @db.Text
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -440,6 +441,7 @@ model Job {
   jobNumber             String                @unique
   title                 String
   description           String?               @db.Text
+  notes                 String?               @db.Text
   trade                 Trade
   status                JobStatus             @default(REQUESTED)
   pricingResponsibility PricingResponsibility @default(COMPANY_PRICED)

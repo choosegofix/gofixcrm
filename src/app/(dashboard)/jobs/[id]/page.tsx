@@ -2,13 +2,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
-import { assignToJob } from "@/app/actions/jobs";
+import { assignToJob, updateJobNotes, updateJobDescription } from "@/app/actions/jobs";
 import { createVisit } from "@/app/actions/visits";
 import { createTask, applyTemplateToJob } from "@/app/actions/tasks";
 import { addTagToJob, removeTagFromJob } from "@/app/actions/tags";
 import { createJobComment } from "@/app/actions/comments";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { FormField, Input, Select } from "@/components/ui/Field";
+import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -28,6 +28,7 @@ import { formatCurrency } from "@/lib/currency";
 import { TicketHeader } from "@/components/ui/TicketHeader";
 import { hasJobAccess } from "@/lib/jobAccess";
 import { areaColor } from "@/lib/serviceArea";
+import { DirectionsLinks } from "@/components/ui/DirectionsLinks";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -100,6 +101,8 @@ export default async function JobDetailPage({
   const applyTemplateForJob = applyTemplateToJob.bind(null, job.id);
   const addTagForJob = addTagToJob.bind(null, job.id);
   const createCommentForJob = createJobComment.bind(null, job.id);
+  const updateNotesForJob = updateJobNotes.bind(null, job.id);
+  const updateDescriptionForJob = updateJobDescription.bind(null, job.id);
 
   const openTasks = job.tasks.filter((t) => t.status === "OPEN");
   const completedTasks = job.tasks.filter((t) => t.status === "COMPLETED");
@@ -110,7 +113,18 @@ export default async function JobDetailPage({
         kind="Job ticket"
         number={job.jobNumber}
         title={job.title}
-        meta={`${job.client.name} — ${job.property.addressLine1}`}
+        meta={
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>
+              {job.client.name} — {job.property.addressLine1}
+            </span>
+            <DirectionsLinks
+              address={`${job.property.addressLine1}, ${job.property.city}, ${job.property.province}`}
+              lat={job.property.lat}
+              lng={job.property.lng}
+            />
+          </span>
+        }
         status={<JobStatusSelect jobId={job.id} status={job.status} />}
         action={
           <div className="flex flex-wrap justify-end gap-1.5">
@@ -134,6 +148,72 @@ export default async function JobDetailPage({
           From quote {job.quote.quoteNumber} →
         </Link>
       )}
+
+      <Card>
+        <CardHeader title="Assigned to" />
+        <CardBody className="space-y-3">
+          {job.assignments.length > 0 ? (
+            <ul className="flex flex-wrap gap-2">
+              {job.assignments.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center gap-2 rounded-full border border-[#EFEAE0] bg-[#FAF7F1] py-1.5 pl-3 pr-2 text-sm"
+                >
+                  <span className="font-medium text-[#16233A]">{a.user?.name ?? a.crew?.name}</span>
+                  {a.role && <span className="text-xs text-[#5B6B82]">· {a.role}</span>}
+                  {user.role !== "SUBCONTRACTOR" && (
+                    <RemoveAssignmentButton jobId={job.id} assignmentId={a.id} />
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[#8A93A3]">Nobody assigned yet.</p>
+          )}
+          {user.role !== "SUBCONTRACTOR" && (
+            <details className="text-sm">
+              <summary className="cursor-pointer font-medium text-[#D9480F]">+ Assign crew or person</summary>
+              <form action={assignToThisJob} className="mt-3 grid gap-3 sm:grid-cols-3">
+                <FormField label="Team member" htmlFor="userId">
+                  <Select id="userId" name="userId" defaultValue="">
+                    <option value="">— none —</option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormField>
+                <FormField
+                  label="Or a crew"
+                  htmlFor="crewId"
+                  hint={job.property.serviceArea ? "Local crews for this area are listed first" : undefined}
+                >
+                  <Select id="crewId" name="crewId" defaultValue="">
+                    <option value="">— none —</option>
+                    {crews.map((c) => {
+                      const isLocal = job.property.serviceAreaId
+                        ? c.serviceAreas.some((sa) => sa.serviceAreaId === job.property.serviceAreaId)
+                        : false;
+                      return (
+                        <option key={c.id} value={c.id}>
+                          {isLocal ? `📍 ${c.name} — local` : c.name}
+                        </option>
+                      );
+                    })}
+                  </Select>
+                </FormField>
+                <FormField label="Role" htmlFor="role" hint="e.g. Lead, Helper">
+                  <Input id="role" name="role" />
+                </FormField>
+                <div className="sm:col-span-3">
+                  <Button type="submit" size="sm">Assign</Button>
+                </div>
+              </form>
+            </details>
+          )}
+        </CardBody>
+      </Card>
 
       <div className="flex flex-wrap items-center gap-1.5">
         {job.tags.map((t) => (
@@ -160,9 +240,9 @@ export default async function JobDetailPage({
           </summary>
           <form action={addTagForJob} className="mt-2 flex items-center gap-2 rounded-md border border-[#E3DDD0] bg-white p-2 shadow-sm">
             {availableTags.length > 0 && (
-              <select
+              <Select
                 name="tagId"
-                className="rounded border border-[#DDD6C7] px-2 py-1 text-xs"
+                className="flex items-center justify-between gap-2 rounded border border-[#DDD6C7] bg-white px-2 py-1 text-xs"
                 defaultValue=""
               >
                 <option value="">— pick existing —</option>
@@ -171,7 +251,7 @@ export default async function JobDetailPage({
                     {t.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             )}
             <input
               type="text"
@@ -188,14 +268,26 @@ export default async function JobDetailPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          {job.description && (
-            <Card>
-              <CardHeader title="Description" />
-              <CardBody>
-                <p className="whitespace-pre-wrap text-sm text-[#3A4A5F]">{job.description}</p>
-              </CardBody>
-            </Card>
-          )}
+          <Card>
+            <CardHeader title="Description" />
+            <CardBody>
+              {user.role === "SUBCONTRACTOR" ? (
+                <p className="whitespace-pre-wrap text-sm text-[#3A4A5F]">
+                  {job.description || <span className="text-[#8A93A3]">No description yet.</span>}
+                </p>
+              ) : (
+                <form action={updateDescriptionForJob} className="space-y-2">
+                  <Textarea
+                    name="description"
+                    rows={4}
+                    defaultValue={job.description ?? ""}
+                    placeholder="What's the job? Symptoms, scope, anything the crew needs to know before arriving…"
+                  />
+                  <Button type="submit" size="sm">Save description</Button>
+                </form>
+              )}
+            </CardBody>
+          </Card>
 
           <Card>
             <CardHeader title="Visits" subtitle="Individual scheduled instances of this job" />
@@ -230,9 +322,9 @@ export default async function JobDetailPage({
               action={
                 templates.length > 0 ? (
                   <form action={applyTemplateForJob} className="flex items-center gap-2">
-                    <select
+                    <Select
                       name="templateId"
-                      className="rounded-md border border-[#DDD6C7] px-2 py-1 text-xs text-[#16233A]"
+                      className="flex items-center justify-between gap-2 rounded-md border border-[#DDD6C7] bg-white px-2 py-1 text-xs text-[#16233A]"
                       defaultValue=""
                       required
                     >
@@ -244,7 +336,7 @@ export default async function JobDetailPage({
                           {t.name}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                     <button type="submit" className="text-xs font-medium text-[#D9480F] hover:underline">
                       Apply
                     </button>
@@ -327,62 +419,22 @@ export default async function JobDetailPage({
 
         <div className="space-y-6">
           <Card>
-            <CardHeader title="Assigned to" />
-            <CardBody className="space-y-4">
-              {job.assignments.length > 0 && (
-                <ul className="space-y-2">
-                  {job.assignments.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between rounded-md border border-[#EFEAE0] px-3 py-2 text-sm">
-                      <div>
-                        <p className="font-medium text-[#16233A]">{a.user?.name ?? a.crew?.name}</p>
-                        {a.role && <p className="text-xs text-[#5B6B82]">{a.role}</p>}
-                      </div>
-                      {user.role !== "SUBCONTRACTOR" && (
-                        <RemoveAssignmentButton jobId={job.id} assignmentId={a.id} />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {user.role !== "SUBCONTRACTOR" && (
-                <details className="text-sm">
-                  <summary className="cursor-pointer font-medium text-[#D9480F]">+ Assign crew or person</summary>
-                  <form action={assignToThisJob} className="mt-3 space-y-3">
-                    <FormField label="Team member" htmlFor="userId">
-                      <Select id="userId" name="userId" defaultValue="">
-                        <option value="">— none —</option>
-                        {users.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name}
-                          </option>
-                        ))}
-                      </Select>
-                    </FormField>
-                    <FormField
-                      label="Or a crew"
-                      htmlFor="crewId"
-                      hint={job.property.serviceArea ? "Local crews for this area are listed first" : undefined}
-                    >
-                      <Select id="crewId" name="crewId" defaultValue="">
-                        <option value="">— none —</option>
-                        {crews.map((c) => {
-                          const isLocal = job.property.serviceAreaId
-                            ? c.serviceAreas.some((sa) => sa.serviceAreaId === job.property.serviceAreaId)
-                            : false;
-                          return (
-                            <option key={c.id} value={c.id}>
-                              {isLocal ? `📍 ${c.name} — local` : c.name}
-                            </option>
-                          );
-                        })}
-                      </Select>
-                    </FormField>
-                    <FormField label="Role" htmlFor="role" hint="e.g. Lead, Helper">
-                      <Input id="role" name="role" />
-                    </FormField>
-                    <Button type="submit" size="sm">Assign</Button>
-                  </form>
-                </details>
+            <CardHeader title="Job notes" subtitle="Internal — not visible to clients" />
+            <CardBody>
+              {user.role === "SUBCONTRACTOR" ? (
+                <p className="whitespace-pre-wrap text-sm text-[#3A4A5F]">
+                  {job.notes || <span className="text-[#8A93A3]">No notes yet.</span>}
+                </p>
+              ) : (
+                <form action={updateNotesForJob} className="space-y-2">
+                  <Textarea
+                    name="notes"
+                    rows={6}
+                    defaultValue={job.notes ?? ""}
+                    placeholder="Gate codes, parking instructions, anything the crew or office should know…"
+                  />
+                  <Button type="submit" size="sm">Save notes</Button>
+                </form>
               )}
             </CardBody>
           </Card>

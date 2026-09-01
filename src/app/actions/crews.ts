@@ -73,3 +73,15 @@ export async function addCrewMember(crewId: string, formData: FormData) {
   await prisma.crewMember.create({ data: { crewId, userId } });
   revalidatePath(`/crews/${crewId}`);
 }
+
+export async function updateCrewNotes(crewId: string, formData: FormData) {
+  await requireOfficeOrAdmin();
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  await prisma.crew.update({
+    where: { id: crewId },
+    data: { notes: notes || null },
+  });
+
+  revalidatePath(`/crews/${crewId}`);
+}

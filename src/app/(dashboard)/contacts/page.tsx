@@ -135,11 +135,11 @@ export default async function ContactsPage({
                               ? "/leads"
                               : null;
                       return (
-                        <tr key={c.id}>
+                        <tr key={c.id} className="hover:bg-[#FAF7F1]">
                           <td className="px-5 py-3">
-                            <p className="font-medium text-[#16233A]">
+                            <Link href={`/contacts/${c.id}`} className="font-medium text-[#16233A] hover:text-[#D9480F]">
                               {c.firstName} {c.lastName}
-                            </p>
+                            </Link>
                             {c.title && <p className="text-xs text-[#5B6B82]">{c.title}</p>}
                           </td>
                           <td className="px-5 py-3 text-[#5B6B82]">
