@@ -95,6 +95,69 @@ export async function createInvoice(formData: FormData) {
   redirect(`/invoices/${invoice.id}`);
 }
 
+export async function updateInvoice(invoiceId: string, formData: FormData) {
+  const user = await requireUser();
+  const company = await getCompany();
+
+  const existing = await prisma.invoice.findUniqueOrThrow({ where: { id: invoiceId } });
+  if (existing.status === "VOID" || Number(existing.amountPaid) > 0) {
+    throw new Error("This invoice can't be edited anymore — it's void or already has payments recorded.");
+  }
+
+  const dueDateRaw = String(formData.get("dueDate") ?? "");
+  if (!dueDateRaw) throw new Error("Due date is required.");
+
+  const items = parseLineItems(formData);
+  if (items.length === 0) throw new Error("Add at least one line item.");
+
+  const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+  const taxAmount = subtotal * TAX_RATE;
+  const total = subtotal + taxAmount;
+
+  const billingContactName = String(formData.get("billingContactName") ?? "").trim();
+  const billingContactId = billingContactName
+    ? await resolvePersonContactId(company.id, billingContactName, {
+        email: String(formData.get("billingContactEmail") ?? "") || null,
+        phone: String(formData.get("billingContactPhone") ?? "") || null,
+      })
+    : null;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.invoiceLineItem.deleteMany({ where: { invoiceId } });
+    await tx.invoice.update({
+      where: { id: invoiceId },
+      data: {
+        dueDate: parseISO(dueDateRaw),
+        billingContactId,
+        subtotal,
+        taxAmount,
+        total,
+        notes: String(formData.get("notes") ?? "") || null,
+        lineItems: {
+          create: items.map((item, i) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            sortOrder: i,
+            total: item.quantity * item.unitPrice,
+          })),
+        },
+      },
+    });
+  });
+
+  await logAudit({
+    companyId: company.id,
+    entityType: "Invoice",
+    entityId: invoiceId,
+    action: "updated",
+    performedByUserId: user.id,
+  });
+
+  revalidatePath(`/invoices/${invoiceId}`);
+  redirect(`/invoices/${invoiceId}`);
+}
+
 export async function recordPayment(invoiceId: string, formData: FormData) {
   const user = await requireUser();
 

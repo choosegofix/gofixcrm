@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCompany } from "@/lib/company";
 import { requireUser } from "@/lib/session";
-import { assignToJob, updateJobNotes, updateJobDescription } from "@/app/actions/jobs";
+import { assignToJob, updateJobNotes, updateJobDescription, updateJobDetails } from "@/app/actions/jobs";
 import { createVisit } from "@/app/actions/visits";
 import { createTask, applyTemplateToJob } from "@/app/actions/tasks";
 import { addTagToJob, removeTagFromJob } from "@/app/actions/tags";
@@ -103,6 +103,7 @@ export default async function JobDetailPage({
   const createCommentForJob = createJobComment.bind(null, job.id);
   const updateNotesForJob = updateJobNotes.bind(null, job.id);
   const updateDescriptionForJob = updateJobDescription.bind(null, job.id);
+  const updateDetailsForJob = updateJobDetails.bind(null, job.id);
 
   const openTasks = job.tasks.filter((t) => t.status === "OPEN");
   const completedTasks = job.tasks.filter((t) => t.status === "COMPLETED");
@@ -214,6 +215,40 @@ export default async function JobDetailPage({
           )}
         </CardBody>
       </Card>
+
+      {user.role !== "SUBCONTRACTOR" && (
+        <details className="group">
+          <summary className="cursor-pointer text-xs font-medium text-[#D9480F]">
+            <span className="group-open:hidden">▸ Edit job details</span>
+            <span className="hidden group-open:inline">▾ Edit job details</span>
+          </summary>
+          <Card className="mt-2">
+            <CardBody>
+              <form action={updateDetailsForJob} className="grid gap-3 sm:grid-cols-3">
+                <FormField label="Job title" htmlFor="editTitle" required>
+                  <Input id="editTitle" name="title" required defaultValue={job.title} />
+                </FormField>
+                <FormField label="Trade" htmlFor="editTrade" required>
+                  <Select id="editTrade" name="trade" defaultValue={job.trade}>
+                    <option value="HVAC">HVAC</option>
+                    <option value="ELECTRICAL">Electrical</option>
+                    <option value="PLUMBING">Plumbing</option>
+                  </Select>
+                </FormField>
+                <FormField label="Who prices this job?" htmlFor="editPricing">
+                  <Select id="editPricing" name="pricingResponsibility" defaultValue={job.pricingResponsibility}>
+                    <option value="COMPANY_PRICED">Company-priced</option>
+                    <option value="SUBCONTRACTOR_PRICED">Subcontractor-priced</option>
+                  </Select>
+                </FormField>
+                <div className="sm:col-span-3">
+                  <Button type="submit" size="sm">Save details</Button>
+                </div>
+              </form>
+            </CardBody>
+          </Card>
+        </details>
+      )}
 
       <div className="flex flex-wrap items-center gap-1.5">
         {job.tags.map((t) => (

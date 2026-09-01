@@ -6,8 +6,26 @@ import { Button } from "@/components/ui/Button";
 
 let nextId = 0;
 
-export function LineItemsEditor({ showOptional = true }: { showOptional?: boolean }) {
-  const [rows, setRows] = useState(() => [{ key: nextId++ }]);
+export type LineItemInit = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  isOptional?: boolean;
+};
+
+export function LineItemsEditor({
+  showOptional = true,
+  initialItems,
+}: {
+  showOptional?: boolean;
+  initialItems?: LineItemInit[];
+}) {
+  const [rows, setRows] = useState(() =>
+    (initialItems && initialItems.length > 0 ? initialItems : [undefined]).map((item) => ({
+      key: nextId++,
+      item,
+    }))
+  );
   const rowGridClass = showOptional
     ? "grid grid-cols-[1fr_5rem_7rem_5rem_2rem] items-center gap-2"
     : "grid grid-cols-[1fr_5rem_7rem_2rem] items-center gap-2";
@@ -27,11 +45,35 @@ export function LineItemsEditor({ showOptional = true }: { showOptional?: boolea
       </div>
       {rows.map((row, i) => (
         <div key={row.key} className={rowGridClass}>
-          <Input name={`desc_${i}`} required placeholder="e.g. Labour — replace capacitor" />
-          <Input name={`qty_${i}`} type="number" step="0.01" defaultValue="1" required />
-          <Input name={`price_${i}`} type="number" step="0.01" min="0" required placeholder="0.00" />
+          <Input
+            name={`desc_${i}`}
+            required
+            placeholder="e.g. Labour — replace capacitor"
+            defaultValue={row.item?.description}
+          />
+          <Input
+            name={`qty_${i}`}
+            type="number"
+            step="0.01"
+            defaultValue={row.item ? row.item.quantity : "1"}
+            required
+          />
+          <Input
+            name={`price_${i}`}
+            type="number"
+            step="0.01"
+            min="0"
+            required
+            placeholder="0.00"
+            defaultValue={row.item?.unitPrice}
+          />
           {showOptional && (
-            <input type="checkbox" name={`optional_${i}`} className="h-4 w-4 justify-self-center" />
+            <input
+              type="checkbox"
+              name={`optional_${i}`}
+              defaultChecked={row.item?.isOptional}
+              className="h-4 w-4 justify-self-center"
+            />
           )}
           <button
             type="button"
@@ -47,7 +89,7 @@ export function LineItemsEditor({ showOptional = true }: { showOptional?: boolea
         type="button"
         variant="secondary"
         size="sm"
-        onClick={() => setRows((r) => [...r, { key: nextId++ }])}
+        onClick={() => setRows((r) => [...r, { key: nextId++, item: undefined }])}
       >
         + Add line
       </Button>

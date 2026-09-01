@@ -165,6 +165,28 @@ export async function removeAssignment(jobId: string, assignmentId: string) {
   revalidatePath(`/jobs/${jobId}`);
 }
 
+export async function updateJobDetails(jobId: string, formData: FormData) {
+  const user = await requireUser();
+  if (user.role === "SUBCONTRACTOR") throw new Error("Only office staff can edit job details.");
+  await requireJobAccess(user, jobId);
+
+  const title = String(formData.get("title") ?? "").trim();
+  const trade = String(formData.get("trade") ?? "") as Trade;
+  const pricingResponsibility = String(
+    formData.get("pricingResponsibility") ?? "COMPANY_PRICED"
+  ) as PricingResponsibility;
+
+  if (!title || !trade) throw new Error("Title and trade are required.");
+
+  await prisma.job.update({
+    where: { id: jobId },
+    data: { title, trade, pricingResponsibility },
+  });
+
+  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath("/jobs");
+}
+
 export async function updateJobDescription(jobId: string, formData: FormData) {
   const user = await requireUser();
   await requireJobAccess(user, jobId);

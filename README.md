@@ -81,6 +81,14 @@ just the plan below). Right now:
   this comes up. Invoices also gained an optional "Billing contact" field
   so you can bill a specific person instead of always the client's default
   contact.
+- ✅ **Editing existing records**: Jobs (title/trade/pricing, via a small
+  disclosure on the job page), Contacts (name/title/email/phone/preferred
+  contact method), Quotes, and Invoices can all be edited after creation,
+  not just at creation time. Quotes and Invoices get a full edit page
+  (line items included, totals recalculate automatically) — a quote locks
+  once it's been approved, declined, or expired, and an invoice locks once
+  a payment has been recorded against it or it's voided, since editing the
+  amount at that point would contradict money already on record.
 - ✅ **Modern UI pass**: refreshed Dashboard (quick-action buttons, accented
   stat cards, hover affordances) and Jobs list (toolbar-style filters,
   trade-colored rows), plus every dropdown in the app was rebuilt as a

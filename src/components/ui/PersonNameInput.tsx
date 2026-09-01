@@ -16,6 +16,7 @@ export function PersonNameInput({
   required,
   id,
   className,
+  defaultValue,
 }: {
   name: string;
   existingNames: string[];
@@ -23,8 +24,9 @@ export function PersonNameInput({
   required?: boolean;
   id?: string;
   className?: string;
+  defaultValue?: string;
 }) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(defaultValue ?? "");
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 

@@ -39,6 +39,7 @@ export default async function QuoteDetailPage({
       })
     : [];
   const depositPaid = deposits.reduce((sum, p) => sum + Number(p.amount), 0);
+  const isEditable = quote.status !== "APPROVED" && quote.status !== "DECLINED" && quote.status !== "EXPIRED";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -71,6 +72,11 @@ export default async function QuoteDetailPage({
         {quote.job && (
           <Link href={`/jobs/${quote.job.id}`} className="text-xs font-medium text-[#D9480F] hover:underline">
             View job {quote.job.jobNumber} →
+          </Link>
+        )}
+        {isEditable && (
+          <Link href={`/quotes/${quote.id}/edit`} className="text-xs font-medium text-[#D9480F] hover:underline">
+            Edit quote →
           </Link>
         )}
       </div>

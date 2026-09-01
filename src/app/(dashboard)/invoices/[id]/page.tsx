@@ -33,6 +33,7 @@ export default async function InvoiceDetailPage({
 
   const balance = Number(invoice.total) - Number(invoice.amountPaid);
   const billingContact = invoice.billingContact ?? invoice.client.contacts[0];
+  const isEditable = invoice.status !== "VOID" && Number(invoice.amountPaid) === 0;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -62,9 +63,16 @@ export default async function InvoiceDetailPage({
           </Badge>
         }
         action={
-          <span className="text-xs text-[#5B6B82]">
-            Issued {format(invoice.issueDate, "MMM d")} · Due {format(invoice.dueDate, "MMM d, yyyy")}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-xs text-[#5B6B82]">
+              Issued {format(invoice.issueDate, "MMM d")} · Due {format(invoice.dueDate, "MMM d, yyyy")}
+            </span>
+            {isEditable && (
+              <Link href={`/invoices/${invoice.id}/edit`} className="text-xs font-medium text-[#D9480F] hover:underline">
+                Edit invoice →
+              </Link>
+            )}
+          </div>
         }
       />
 

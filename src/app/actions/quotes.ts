@@ -95,6 +95,70 @@ export async function createQuote(formData: FormData) {
   redirect(`/quotes/${quote.id}`);
 }
 
+export async function updateQuote(quoteId: string, formData: FormData) {
+  const user = await requireUser();
+  const company = await getCompany();
+
+  const existing = await prisma.quote.findUniqueOrThrow({ where: { id: quoteId } });
+  if (existing.status === "APPROVED" || existing.status === "DECLINED" || existing.status === "EXPIRED") {
+    throw new Error("This quote can't be edited anymore — it's already been acted on.");
+  }
+
+  const title = String(formData.get("title") ?? "").trim();
+  const trade = String(formData.get("trade") ?? "") as Trade;
+  if (!title || !trade) throw new Error("Title and trade are required.");
+
+  const items = parseLineItems(formData);
+  if (items.length === 0) throw new Error("Add at least one line item.");
+
+  const billableItems = items.filter((i) => !i.isOptional);
+  const subtotal = billableItems.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+  const taxAmount = subtotal * TAX_RATE;
+  const total = subtotal + taxAmount;
+
+  const depositRequiredRaw = String(formData.get("depositRequired") ?? "");
+  const validUntilRaw = String(formData.get("validUntil") ?? "");
+
+  await prisma.$transaction(async (tx) => {
+    await tx.quoteLineItem.deleteMany({ where: { quoteId } });
+    await tx.quote.update({
+      where: { id: quoteId },
+      data: {
+        title,
+        trade,
+        subtotal,
+        taxAmount,
+        total,
+        depositRequired: depositRequiredRaw ? Number(depositRequiredRaw) : null,
+        validUntil: validUntilRaw ? parseISO(validUntilRaw) : null,
+        notes: String(formData.get("notes") ?? "") || null,
+        termsAndConditions: String(formData.get("termsAndConditions") ?? "") || null,
+        lineItems: {
+          create: items.map((item, i) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            isOptional: item.isOptional,
+            sortOrder: i,
+            total: item.quantity * item.unitPrice,
+          })),
+        },
+      },
+    });
+  });
+
+  await logAudit({
+    companyId: company.id,
+    entityType: "Quote",
+    entityId: quoteId,
+    action: "updated",
+    performedByUserId: user.id,
+  });
+
+  revalidatePath(`/quotes/${quoteId}`);
+  redirect(`/quotes/${quoteId}`);
+}
+
 export async function markQuoteSent(quoteId: string) {
   const user = await requireUser();
   const quote = await prisma.quote.update({

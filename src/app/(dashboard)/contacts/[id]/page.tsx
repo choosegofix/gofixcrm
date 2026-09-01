@@ -1,14 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Mail, Phone, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireOfficeOrAdmin } from "@/lib/session";
-import { updateContactNotes } from "@/app/actions/contacts";
+import { updateContactDetails, updateContactNotes } from "@/app/actions/contacts";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { Textarea } from "@/components/ui/Field";
+import { FormField, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { commPreferenceLabels } from "@/lib/labels";
 
 function contactType(c: {
   clientId: string | null;
@@ -76,6 +75,7 @@ export default async function ContactDetailPage({
               : "General contact";
 
   const updateNotesForContact = updateContactNotes.bind(null, contact.id);
+  const updateDetailsForContact = updateContactDetails.bind(null, contact.id);
 
   return (
     <div className="space-y-6">
@@ -111,31 +111,45 @@ export default async function ContactDetailPage({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Contact info" />
-          <CardBody className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <Mail size={15} className="text-[#8A93A3]" />
-              {contact.email ? (
-                <a href={`mailto:${contact.email}`} className="text-[#16233A] hover:text-[#D9480F]">
-                  {contact.email}
-                </a>
-              ) : (
-                <span className="text-[#8A93A3]">No email on file</span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Phone size={15} className="text-[#8A93A3]" />
-              {contact.phone ? (
-                <a href={`tel:${contact.phone}`} className="text-[#16233A] hover:text-[#D9480F]">
-                  {contact.phone}
-                </a>
-              ) : (
-                <span className="text-[#8A93A3]">No phone on file</span>
-              )}
-            </div>
-            <p className="text-xs text-[#5B6B82]">
-              Prefers <span className="font-medium text-[#16233A]">{commPreferenceLabels[contact.commPreference]}</span>
-            </p>
+          <CardHeader
+            title="Contact info"
+            subtitle={
+              type === "Staff"
+                ? "Mirrors their Team & Settings account — edit login email there"
+                : undefined
+            }
+          />
+          <CardBody>
+            <form action={updateDetailsForContact} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="First name" htmlFor="firstName" required>
+                  <Input id="firstName" name="firstName" required defaultValue={contact.firstName} />
+                </FormField>
+                <FormField label="Last name" htmlFor="lastName">
+                  <Input id="lastName" name="lastName" defaultValue={contact.lastName} />
+                </FormField>
+              </div>
+              <FormField label="Title / company" htmlFor="title">
+                <Input id="title" name="title" defaultValue={contact.title ?? ""} />
+              </FormField>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="Email" htmlFor="email">
+                  <Input id="email" name="email" type="email" defaultValue={contact.email ?? ""} />
+                </FormField>
+                <FormField label="Phone" htmlFor="phone">
+                  <Input id="phone" name="phone" type="tel" defaultValue={contact.phone ?? ""} />
+                </FormField>
+              </div>
+              <FormField label="Preferred contact method" htmlFor="commPreference">
+                <Select id="commPreference" name="commPreference" defaultValue={contact.commPreference}>
+                  <option value="EMAIL">Email</option>
+                  <option value="SMS">SMS</option>
+                  <option value="PHONE">Phone</option>
+                  <option value="ANY">Any</option>
+                </Select>
+              </FormField>
+              <Button type="submit" size="sm">Save changes</Button>
+            </form>
           </CardBody>
         </Card>
 
