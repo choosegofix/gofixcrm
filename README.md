@@ -31,7 +31,10 @@ just the plan below). Right now:
   geocoded automatically (free, no API key) so a "local crew" can be
   suggested, and the **Map** page plots every active job as a pin on a free
   OpenStreetMap map with one-click Google Maps / Apple Maps / Waze
-  directions in each pin's popup.
+  directions in each pin's popup. Pins are colored by trade (plumbing
+  blue, electrical yellow, HVAC green); a property with more than one
+  active trade at once gets a single pin split evenly by color instead of
+  stacked, overlapping pins, and its popup lists every job there.
 - ✅ **Filters** on Jobs, Crews, Leads, Quotes, and Invoices (by trade, area,
   status, or source, wherever relevant).
 - ✅ **Contacts directory**: a company-wide address book. Every lead and

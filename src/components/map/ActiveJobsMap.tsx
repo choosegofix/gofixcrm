@@ -41,32 +41,68 @@ export function ActiveJobsMap({ jobs }: { jobs: MapJob[] }) {
         maxZoom: 19,
       }).addTo(map);
 
+      // Two jobs at the same address get one pin, not two stacked on top
+      // of each other -- split into equal wedges, one per distinct trade
+      // present there (half/half for two trades, thirds for three).
+      const groups = new Map<string, MapJob[]>();
+      for (const job of jobs) {
+        const key = `${job.lat},${job.lng}`;
+        const existing = groups.get(key);
+        if (existing) existing.push(job);
+        else groups.set(key, [job]);
+      }
+
       const bounds: [number, number][] = [];
 
-      for (const job of jobs) {
-        const color = (tradeAccent as Record<string, string>)[job.trade] ?? "#5B6B82";
+      for (const groupJobs of groups.values()) {
+        const { lat, lng, clientName, address } = groupJobs[0];
+        const trades = [...new Set(groupJobs.map((j) => j.trade))];
+        const colors = trades.map((t) => (tradeAccent as Record<string, string>)[t] ?? "#5B6B82");
+
+        const background =
+          colors.length === 1
+            ? colors[0]
+            : `conic-gradient(${colors
+                .map(
+                  (c, i) =>
+                    `${c} ${(i * 360) / colors.length}deg ${((i + 1) * 360) / colors.length}deg`
+                )
+                .join(", ")})`;
+
         const icon = L.divIcon({
           className: "",
-          html: `<div style="background:${color};width:22px;height:22px;border-radius:9999px;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.45)"></div>`,
+          html: `<div style="background:${background};width:22px;height:22px;border-radius:9999px;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.45)"></div>`,
           iconSize: [22, 22],
           iconAnchor: [11, 11],
         });
 
-        const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}`;
-        const appleMaps = `https://maps.apple.com/?daddr=${job.lat},${job.lng}`;
-        const waze = `https://waze.com/ul?ll=${job.lat},${job.lng}&navigate=yes`;
+        const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        const appleMaps = `https://maps.apple.com/?daddr=${lat},${lng}`;
+        const waze = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
         const linkStyle =
           "display:inline-block;margin-top:4px;margin-right:8px;font-size:12px;color:#D9480F;text-decoration:none;";
 
         const openDirections = (url: string) =>
           `window.open('${url}','_blank','noopener,noreferrer')||(window.location.href='${url}');return false;`;
 
-        const marker = L.marker([job.lat, job.lng], { icon }).addTo(map);
+        const jobsHtml = groupJobs
+          .map((job) => {
+            const dotColor = (tradeAccent as Record<string, string>)[job.trade] ?? "#5B6B82";
+            return (
+              `<div style="display:flex;align-items:center;gap:6px;margin-top:3px">` +
+              `<span style="display:inline-block;width:8px;height:8px;flex-shrink:0;border-radius:9999px;background:${dotColor}"></span>` +
+              `<a href="/jobs/${job.id}" style="color:#16233A;font-weight:600;font-size:13px;text-decoration:none">${job.jobNumber} · ${escapeHtml(job.title)}</a>` +
+              `</div>`
+            );
+          })
+          .join("");
+
+        const marker = L.marker([lat, lng], { icon }).addTo(map);
         marker.bindPopup(
-          `<div style="min-width:180px">` +
-            `<strong>${job.jobNumber} · ${escapeHtml(job.title)}</strong><br/>` +
-            `${escapeHtml(job.clientName)}<br/>${escapeHtml(job.address)}<br/>` +
-            `<a href="/jobs/${job.id}" style="color:#D9480F;font-weight:600;font-size:13px">Open job →</a>` +
+          `<div style="min-width:190px">` +
+            `<strong>${escapeHtml(clientName)}</strong><br/>` +
+            `${escapeHtml(address)}` +
+            `<div style="margin-top:4px">${jobsHtml}</div>` +
             `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #E3DDD0">` +
             `<span style="font-size:11px;color:#8A93A3">Directions:</span><br/>` +
             `<a href="${gmaps}" onclick="${openDirections(gmaps)}" style="${linkStyle}">Google Maps</a>` +
@@ -75,7 +111,7 @@ export function ActiveJobsMap({ jobs }: { jobs: MapJob[] }) {
             `</div>` +
             `</div>`
         );
-        bounds.push([job.lat, job.lng]);
+        bounds.push([lat, lng]);
       }
 
       if (bounds.length > 0) {
